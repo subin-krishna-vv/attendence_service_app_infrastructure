@@ -58,7 +58,7 @@ The nginx placeholder does not read DynamoDB or DAX. The data layer, its network
 bootstrap/<env>/        per-environment S3 state bucket (local state, applied once)
 modules/templates/      security-group, iam-role, iam-policy (the only place SGs/IAM are declared)
 modules/<component>/    vpc (incl. gateway endpoints), acm-certificate, alb, waf, ecs-service,
-                        dynamodb-global-table, dax, observability, route53-latency
+                        dynamodb-global-table, dax, observability, dashboard, route53-latency
 envs/<env>/             global, us-east-1, us-east-2, global-dns (module blocks only)
 ```
 
