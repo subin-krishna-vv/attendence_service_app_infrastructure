@@ -22,14 +22,26 @@ Both are request-based over a rolling 30 days. 4xx responses are excluded.
      WAF -> ALB (public, 3 AZs, TLS)       WAF -> ALB (public, 3 AZs, TLS)
             |                                     |
      ECS Fargate, nginx :80                ECS Fargate, nginx :80
-       (private app subnets, 3 AZs)          (private app subnets, 3 AZs)
+       (private subnets, 3 AZs)              (private subnets, 3 AZs)
             |                                     |
-     DAX (private data subnets)            DAX (private data subnets)
+     DAX (private subnets)                 DAX (private subnets)
             |                                     |
      DynamoDB replica  <== global table replication ==>  DynamoDB replica
 
+     Egress per region: one regional NAT gateway (auto mode, spans all 3 AZs)
+     Endpoints per region: S3 + DynamoDB gateway endpoints (free)
      Observability: Amazon CloudWatch (SLIs, alarms, dashboards) across both regions
 ```
+
+### Network (per region)
+
+| Environment | us-east-1 | us-east-2 |
+| --- | --- | --- |
+| dev | `10.10.0.0/16` | `10.11.0.0/16` |
+| staging | `10.20.0.0/16` | `10.21.0.0/16` |
+| prod | `10.30.0.0/16` | `10.31.0.0/16` |
+
+Each VPC has 3 public and 3 private `/20` subnets, one of each per AZ (the first 3 standard AZs by name). Public subnets use the lower half of the `/16` and private subnets the upper half. See [modules/vpc](modules/vpc/README.md).
 
 How this meets the SLOs:
 
@@ -45,7 +57,7 @@ The nginx placeholder does not read DynamoDB or DAX. The data layer, its network
 ```text
 bootstrap/<env>/        per-environment S3 state bucket (local state, applied once)
 modules/templates/      security-group, iam-role, iam-policy (the only place SGs/IAM are declared)
-modules/<component>/    vpc, vpc-endpoints, acm-certificate, alb, waf, ecs-service,
+modules/<component>/    vpc (incl. gateway endpoints), acm-certificate, alb, waf, ecs-service,
                         dynamodb-global-table, dax, observability, route53-latency
 envs/<env>/             global-data, us-east-1, us-east-2, global-dns (module blocks only)
 ```
@@ -98,14 +110,17 @@ These skips apply to the **whole repo**, not to a single resource:
 | CKV_AWS_145 | S3 buckets use SSE-S3 (S3-managed keys), not KMS |
 | CKV2_AWS_62 | No consumer for S3 event notifications |
 | CKV2_AWS_5 | The security-group template doesn't attach its group; callers do |
+| CKV2_AWS_11 | VPC flow logs are not used (design decision) |
+| CKV_AWS_394 | The AZ list isn't pinned. The VPC takes the first 3 AZs sorted by name, and new AZs get later letters, so the selection doesn't change. |
 
 Because the skips are repo-wide, check this table when adding a new module so that a real finding isn't hidden.
 
 ## Known deviations from a hardened design (deliberate)
 
 - **nginx runs as root on port 80** (the official image). Hardening path: an unprivileged image on 8080, a read-only root filesystem, and dropping all Linux capabilities.
-- **Images are pulled from Docker Hub through NAT.** This puts a public dependency in the scaling path, and anonymous pull rate limits apply. ECR interface endpoints already exist for a later move to ECR.
-- **VPC flow logs are off by default** (a toggle). Checkov flags this.
+- **Images are pulled from Docker Hub through NAT.** This puts a public dependency in the scaling path, and anonymous pull rate limits apply. Moving to ECR (with ECR interface endpoints) is the hardening path.
+- **No interface endpoints** (ECR, CloudWatch Logs). Container logs reach CloudWatch through the NAT gateway.
+- **No VPC flow logs.** Network traffic is not logged at VPC level.
 - **Security groups allow all outbound traffic.** Inbound rules (security-group sources wherever possible) are the control point. See [modules/templates/security-group](modules/templates/security-group/README.md).
 - **One AWS account hosts all environments.** Separate accounts per environment are the production target.
 - **State buckets use SSE-S3 (not KMS) and are not replicated across regions**, and have no access logging, event notifications or TLS-only bucket policy. See [bootstrap/dev/README.md](bootstrap/dev/README.md).

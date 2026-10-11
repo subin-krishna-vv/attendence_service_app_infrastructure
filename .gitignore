@@ -56,3 +56,6 @@ tfplan
 
 # macOS
 .DS_Store
+
+# Lock files belong only to root stacks (bootstrap/, envs/)
+modules/**/.terraform.lock.hcl
