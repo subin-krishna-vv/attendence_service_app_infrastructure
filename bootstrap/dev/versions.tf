@@ -1,4 +1,3 @@
-# Bootstrap uses local state: the S3 state bucket it creates does not exist yet.
 terraform {
   required_version = "~> 1.16.1"
 

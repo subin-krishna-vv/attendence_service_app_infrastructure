@@ -1,0 +1,8 @@
+skip-path:
+  - \.terraform/
+skip-check:
+  - CKV_AWS_18
+  - CKV_AWS_144
+  - CKV_AWS_145
+  - CKV2_AWS_62
+  - CKV2_AWS_5

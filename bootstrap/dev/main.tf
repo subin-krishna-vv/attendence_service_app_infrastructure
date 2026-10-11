@@ -1,15 +1,10 @@
 data "aws_caller_identity" "current" {}
 
 locals {
-  # Account ID suffix keeps the globally unique bucket name predictable without hard-coding it.
   state_bucket_name = "${var.project}-${var.env}-tfstate-${data.aws_caller_identity.current.account_id}"
 }
 
 resource "aws_s3_bucket" "state" {
-  #checkov:skip=CKV_AWS_18:Access logging needs a separate log bucket; not justified for a low-traffic state bucket. Accepted deviation, see README.
-  #checkov:skip=CKV_AWS_144:Cross-region replication deliberately not used for state; versioning covers recovery. Accepted deviation, see README.
-  #checkov:skip=CKV2_AWS_62:Event notifications have no consumer for a state bucket. Accepted deviation, see README.
-  #checkov:skip=CKV_AWS_145:SSE-S3 (S3-managed AES-256) chosen deliberately for state; no KMS key to manage. Accepted deviation, see README.
   bucket        = local.state_bucket_name
   force_destroy = false
 
@@ -26,7 +21,6 @@ resource "aws_s3_bucket_versioning" "state" {
   }
 }
 
-# SSE-S3: Amazon S3 managed keys (AES-256).
 resource "aws_s3_bucket_server_side_encryption_configuration" "state" {
   bucket = aws_s3_bucket.state.id
 
@@ -72,6 +66,5 @@ resource "aws_s3_bucket_lifecycle_configuration" "state" {
     }
   }
 
-  # Lifecycle rules on a versioned bucket must be applied after versioning is enabled.
   depends_on = [aws_s3_bucket_versioning.state]
 }

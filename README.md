@@ -74,16 +74,38 @@ terraform fmt -check -recursive
 terraform init -backend=false && terraform validate
 tflint --init --config="$(git rev-parse --show-toplevel)/.tflint.hcl"
 tflint --config="$(git rev-parse --show-toplevel)/.tflint.hcl"
-docker run --rm -v "$PWD:/tf" bridgecrew/checkov:3.3.20 -d /tf --compact --skip-path .terraform
-terraform test            # modules only; uses mock providers, no AWS cost
+terraform test
+```
+
+`terraform test` applies to modules only. It uses mock providers, so it has no AWS cost.
+
+Checkov runs once from the repo root:
+
+```sh
+docker run --rm -v "$PWD:/repo" -w /repo bridgecrew/checkov:3.3.20 -d . --config-file .checkov.yaml --compact
 ```
 
 Checkov runs from the pinned Docker image because the Homebrew `checkov` 3.3.20 package ships without its Terraform graph checks. With it, the S3 encryption, logging and replication checks silently don't run.
+
+### Accepted Checkov skips (`.checkov.yaml`)
+
+These skips apply to the **whole repo**, not to a single resource:
+
+| Check | Reason |
+| --- | --- |
+| CKV_AWS_18 | S3 access logging would need a second log bucket |
+| CKV_AWS_144 | No cross-region replication for S3 buckets |
+| CKV_AWS_145 | S3 buckets use SSE-S3 (S3-managed keys), not KMS |
+| CKV2_AWS_62 | No consumer for S3 event notifications |
+| CKV2_AWS_5 | The security-group template doesn't attach its group; callers do |
+
+Because the skips are repo-wide, check this table when adding a new module so that a real finding isn't hidden.
 
 ## Known deviations from a hardened design (deliberate)
 
 - **nginx runs as root on port 80** (the official image). Hardening path: an unprivileged image on 8080, a read-only root filesystem, and dropping all Linux capabilities.
 - **Images are pulled from Docker Hub through NAT.** This puts a public dependency in the scaling path, and anonymous pull rate limits apply. ECR interface endpoints already exist for a later move to ECR.
 - **VPC flow logs are off by default** (a toggle). Checkov flags this.
+- **Security groups allow all outbound traffic.** Inbound rules (security-group sources wherever possible) are the control point. See [modules/templates/security-group](modules/templates/security-group/README.md).
 - **One AWS account hosts all environments.** Separate accounts per environment are the production target.
-- **State buckets use SSE-S3 (not KMS) and are not replicated across regions**, and have no access logging, event notifications or TLS-only bucket policy. Checkov skips are documented inline; see [bootstrap/dev/README.md](bootstrap/dev/README.md).
+- **State buckets use SSE-S3 (not KMS) and are not replicated across regions**, and have no access logging, event notifications or TLS-only bucket policy. See [bootstrap/dev/README.md](bootstrap/dev/README.md).

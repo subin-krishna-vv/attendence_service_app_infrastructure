@@ -61,7 +61,7 @@ terraform {
 }
 ```
 
-## Design notes and accepted Checkov skips
+## Design notes
 
 - **No cross-region replication (CKV_AWS_144).** State for every dev stack, including us-east-2, lives in us-east-1. If S3 in us-east-1 is unavailable, Terraform cannot run for any dev stack until it recovers. Running services are not affected. Versioning gives point-in-time recovery of state.
 - **No access logging (CKV_AWS_18).** It would need a second log bucket. CloudTrail management events still record bucket-level changes.
