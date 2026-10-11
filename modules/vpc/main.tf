@@ -8,16 +8,16 @@ data "aws_availability_zones" "this" {
 }
 
 locals {
-  azs = slice(sort(data.aws_availability_zones.this.names), 0, min(3, length(data.aws_availability_zones.this.names)))
+  azs = slice(sort(data.aws_availability_zones.this.names), 0, min(var.az_count, length(data.aws_availability_zones.this.names)))
 
-  public_subnet_cidrs  = { for i, az in local.azs : az => cidrsubnet(var.vpc_cidr, 4, i) }
-  private_subnet_cidrs = { for i, az in local.azs : az => cidrsubnet(var.vpc_cidr, 4, 8 + i) }
+  public_subnet_cidrs  = { for i, az in local.azs : az => cidrsubnet(var.vpc_cidr, var.subnet_newbits, var.public_subnet_offset + i) }
+  private_subnet_cidrs = { for i, az in local.azs : az => cidrsubnet(var.vpc_cidr, var.subnet_newbits, var.private_subnet_offset + i) }
 }
 
 resource "aws_vpc" "this" {
   cidr_block           = var.vpc_cidr
-  enable_dns_support   = true
-  enable_dns_hostnames = true
+  enable_dns_support   = var.enable_dns_support
+  enable_dns_hostnames = var.enable_dns_hostnames
 
   tags = {
     Name = "${var.name_prefix}-vpc"
@@ -25,8 +25,8 @@ resource "aws_vpc" "this" {
 
   lifecycle {
     precondition {
-      condition     = length(data.aws_availability_zones.this.names) >= 3
-      error_message = "The region must have at least 3 standard Availability Zones."
+      condition     = length(data.aws_availability_zones.this.names) >= var.az_count
+      error_message = "The region has fewer standard Availability Zones than az_count."
     }
   }
 }
@@ -55,7 +55,7 @@ resource "aws_subnet" "public" {
   vpc_id                  = aws_vpc.this.id
   availability_zone       = each.key
   cidr_block              = each.value
-  map_public_ip_on_launch = false
+  map_public_ip_on_launch = var.map_public_ip_on_launch
 
   tags = {
     Name = "${var.name_prefix}-public-${each.key}"
@@ -68,7 +68,7 @@ resource "aws_subnet" "private" {
   vpc_id                  = aws_vpc.this.id
   availability_zone       = each.key
   cidr_block              = each.value
-  map_public_ip_on_launch = false
+  map_public_ip_on_launch = var.map_public_ip_on_launch
 
   tags = {
     Name = "${var.name_prefix}-private-${each.key}"

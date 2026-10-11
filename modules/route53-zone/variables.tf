@@ -7,3 +7,15 @@ variable "domain_name" {
     error_message = "domain_name must be a lowercase fully qualified domain name without a trailing dot."
   }
 }
+
+variable "comment" {
+  description = "Zone comment. Defaults to \"Public zone for <domain_name>\" when null."
+  type        = string
+  default     = null
+}
+
+variable "force_destroy" {
+  description = "Delete all records (including ones Terraform does not manage) when the zone is destroyed. Keep false."
+  type        = bool
+  default     = false
+}

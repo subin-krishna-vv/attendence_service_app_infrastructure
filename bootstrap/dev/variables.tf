@@ -53,3 +53,54 @@ variable "noncurrent_version_expiration_days" {
     error_message = "noncurrent_version_expiration_days must be a positive whole number."
   }
 }
+
+variable "force_destroy" {
+  description = "Allow Terraform to delete the state bucket even when it holds objects. Keep false."
+  type        = bool
+  default     = false
+}
+
+variable "enable_versioning" {
+  description = "Keep previous versions of every state file (needed to roll back a bad apply)."
+  type        = bool
+  default     = true
+}
+
+variable "sse_algorithm" {
+  description = "Default server-side encryption: AES256 (SSE-S3) or aws:kms (SSE-KMS with the AWS-managed aws/s3 key)."
+  type        = string
+  default     = "AES256"
+
+  validation {
+    condition     = contains(["AES256", "aws:kms"], var.sse_algorithm)
+    error_message = "sse_algorithm must be AES256 or aws:kms."
+  }
+}
+
+variable "object_ownership" {
+  description = "S3 Object Ownership setting. BucketOwnerEnforced disables ACLs."
+  type        = string
+  default     = "BucketOwnerEnforced"
+
+  validation {
+    condition     = contains(["BucketOwnerEnforced", "BucketOwnerPreferred", "ObjectWriter"], var.object_ownership)
+    error_message = "object_ownership must be BucketOwnerEnforced, BucketOwnerPreferred or ObjectWriter."
+  }
+}
+
+variable "abort_incomplete_multipart_upload_days" {
+  description = "Days after which incomplete multipart uploads are aborted."
+  type        = number
+  default     = 7
+
+  validation {
+    condition     = var.abort_incomplete_multipart_upload_days > 0 && floor(var.abort_incomplete_multipart_upload_days) == var.abort_incomplete_multipart_upload_days
+    error_message = "abort_incomplete_multipart_upload_days must be a positive whole number."
+  }
+}
+
+variable "block_public_access" {
+  description = "Turn on all four S3 Block Public Access settings for the bucket."
+  type        = bool
+  default     = true
+}

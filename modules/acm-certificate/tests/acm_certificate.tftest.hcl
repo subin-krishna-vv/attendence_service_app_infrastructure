@@ -127,3 +127,13 @@ run "rejects_uppercase_zone" {
 
   expect_failures = [var.zone_name]
 }
+
+run "rejects_unsupported_key_algorithm" {
+  command = plan
+
+  variables {
+    key_algorithm = "RSA_1024"
+  }
+
+  expect_failures = [var.key_algorithm]
+}

@@ -7,17 +7,19 @@ Creates a **DNS-validated public ACM certificate** for an environment's domain, 
 | Resource | Purpose |
 | --- | --- |
 | `data.aws_route53_zone.this` | Looks up the existing public zone by name |
-| `aws_acm_certificate.this` | `domain_name` + `*.domain_name` SAN, DNS validation, RSA 2048, `create_before_destroy` |
-| `aws_route53_record.validation` | One validation CNAME per certificate name, TTL 60, `allow_overwrite = true` |
+| `aws_acm_certificate.this` | `domain_name` + `*.domain_name` SAN, DNS validation, `key_algorithm` (default RSA 2048), `create_before_destroy` |
+| `aws_route53_record.validation` | One validation CNAME per certificate name, `validation_record_ttl` (default 60), `allow_overwrite = true` |
 | `aws_acm_certificate_validation.this` | Waits until ACM issues the certificate |
 
 ## Inputs
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
-| `domain_name` | string | — | e.g. `dev.attendance.example.com`; must be `zone_name` or inside it |
-| `zone_name` | string | — | Existing public hosted zone, e.g. `dev.attendance.example.com` |
-| `enable_wildcard` | bool | `true` | Add `*.<domain_name>` as a SAN |
+| `domain_name` | string | — (required) | Domain the certificate is issued for, e.g. dev.attendance.example.com. Must be the zone name or inside it. |
+| `zone_name` | string | — (required) | Name of the existing public Route 53 hosted zone used for DNS validation, e.g. dev.attendance.example.com. |
+| `enable_wildcard` | bool | `true` | Also cover *.<domain_name> as a subject alternative name. |
+| `key_algorithm` | string | `"RSA_2048"` | Certificate key algorithm. |
+| `validation_record_ttl` | number | `60` | TTL in seconds of the DNS validation records. |
 
 ## Outputs
 

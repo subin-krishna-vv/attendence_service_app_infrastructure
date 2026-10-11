@@ -4,7 +4,7 @@ locals {
 
 resource "aws_s3_bucket" "state" {
   bucket        = local.state_bucket_name
-  force_destroy = false
+  force_destroy = var.force_destroy
 
   lifecycle {
     prevent_destroy = true
@@ -15,7 +15,7 @@ resource "aws_s3_bucket_versioning" "state" {
   bucket = aws_s3_bucket.state.id
 
   versioning_configuration {
-    status = "Enabled"
+    status = var.enable_versioning ? "Enabled" : "Suspended"
   }
 }
 
@@ -24,7 +24,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "state" {
 
   rule {
     apply_server_side_encryption_by_default {
-      sse_algorithm = "AES256"
+      sse_algorithm = var.sse_algorithm
     }
   }
 }
@@ -32,17 +32,17 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "state" {
 resource "aws_s3_bucket_public_access_block" "state" {
   bucket = aws_s3_bucket.state.id
 
-  block_public_acls       = true
-  block_public_policy     = true
-  ignore_public_acls      = true
-  restrict_public_buckets = true
+  block_public_acls       = var.block_public_access
+  block_public_policy     = var.block_public_access
+  ignore_public_acls      = var.block_public_access
+  restrict_public_buckets = var.block_public_access
 }
 
 resource "aws_s3_bucket_ownership_controls" "state" {
   bucket = aws_s3_bucket.state.id
 
   rule {
-    object_ownership = "BucketOwnerEnforced"
+    object_ownership = var.object_ownership
   }
 }
 
@@ -60,7 +60,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "state" {
     }
 
     abort_incomplete_multipart_upload {
-      days_after_initiation = 7
+      days_after_initiation = var.abort_incomplete_multipart_upload_days
     }
   }
 

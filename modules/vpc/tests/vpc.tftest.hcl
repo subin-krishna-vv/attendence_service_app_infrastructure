@@ -168,7 +168,7 @@ run "rejects_host_address_cidr" {
   expect_failures = [var.vpc_cidr]
 }
 
-run "fails_with_fewer_than_three_azs" {
+run "fails_with_fewer_azs_than_az_count" {
   command = plan
 
   override_data {
@@ -239,4 +239,49 @@ run "dynamodb_endpoint_off" {
     condition     = length(aws_vpc_endpoint.s3) == 1
     error_message = "Disabling DynamoDB must not affect the S3 endpoint."
   }
+}
+
+run "overrides_az_count_and_layout" {
+  command = plan
+
+  variables {
+    az_count              = 2
+    subnet_newbits        = 8
+    public_subnet_offset  = 0
+    private_subnet_offset = 100
+  }
+
+  assert {
+    condition     = output.azs == tolist(["us-east-1a", "us-east-1b"])
+    error_message = "az_count must control how many AZs are used."
+  }
+
+  assert {
+    condition = (
+      aws_subnet.public["us-east-1b"].cidr_block == "10.10.1.0/24" &&
+      aws_subnet.private["us-east-1a"].cidr_block == "10.10.100.0/24"
+    )
+    error_message = "subnet_newbits and offsets must control subnet CIDRs."
+  }
+}
+
+run "rejects_overlapping_subnet_ranges" {
+  command = plan
+
+  variables {
+    public_subnet_offset  = 0
+    private_subnet_offset = 2
+  }
+
+  expect_failures = [var.private_subnet_offset]
+}
+
+run "rejects_subnets_beyond_vpc" {
+  command = plan
+
+  variables {
+    private_subnet_offset = 14
+  }
+
+  expect_failures = [var.private_subnet_offset]
 }

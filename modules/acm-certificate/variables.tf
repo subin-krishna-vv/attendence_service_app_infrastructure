@@ -28,3 +28,25 @@ variable "enable_wildcard" {
   type        = bool
   default     = true
 }
+
+variable "key_algorithm" {
+  description = "Certificate key algorithm."
+  type        = string
+  default     = "RSA_2048"
+
+  validation {
+    condition     = contains(["RSA_2048", "EC_prime256v1", "EC_secp384r1"], var.key_algorithm)
+    error_message = "key_algorithm must be RSA_2048, EC_prime256v1 or EC_secp384r1."
+  }
+}
+
+variable "validation_record_ttl" {
+  description = "TTL in seconds of the DNS validation records."
+  type        = number
+  default     = 60
+
+  validation {
+    condition     = var.validation_record_ttl >= 30 && var.validation_record_ttl <= 86400
+    error_message = "validation_record_ttl must be between 30 and 86400 seconds."
+  }
+}

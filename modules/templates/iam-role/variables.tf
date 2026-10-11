@@ -44,3 +44,25 @@ variable "enable_source_account_condition" {
   type        = bool
   default     = true
 }
+
+variable "path" {
+  description = "IAM path for the role."
+  type        = string
+  default     = "/"
+
+  validation {
+    condition     = can(regex("^/([A-Za-z0-9+=,.@_-]+/)*$", var.path))
+    error_message = "path must start and end with / (e.g. / or /attendance-service/)."
+  }
+}
+
+variable "max_session_duration" {
+  description = "Maximum session duration in seconds for credentials issued for this role."
+  type        = number
+  default     = 3600
+
+  validation {
+    condition     = var.max_session_duration >= 3600 && var.max_session_duration <= 43200
+    error_message = "max_session_duration must be between 3600 and 43200 seconds."
+  }
+}

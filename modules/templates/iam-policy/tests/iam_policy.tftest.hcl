@@ -50,3 +50,16 @@ run "rejects_empty_description" {
 
   expect_failures = [var.description]
 }
+
+run "overrides_path" {
+  command = plan
+
+  variables {
+    path = "/attendance-service/"
+  }
+
+  assert {
+    condition     = aws_iam_policy.this.path == "/attendance-service/"
+    error_message = "path must follow the variable."
+  }
+}

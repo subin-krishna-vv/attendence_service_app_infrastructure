@@ -1,1 +1,7 @@
-base_domain = "example.com"
+project            = "attendance-service"
+env                = "dev"
+owner              = "devops-team"
+region             = "us-east-1"
+base_domain        = "example.com"
+service_subdomain  = "attendance"
+zone_force_destroy = false

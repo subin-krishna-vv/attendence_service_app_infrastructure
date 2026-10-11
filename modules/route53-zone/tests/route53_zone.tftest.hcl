@@ -52,3 +52,17 @@ run "rejects_single_label" {
 
   expect_failures = [var.domain_name]
 }
+
+run "overrides_comment_and_force_destroy" {
+  command = plan
+
+  variables {
+    comment       = "Dev zone"
+    force_destroy = true
+  }
+
+  assert {
+    condition     = aws_route53_zone.this.comment == "Dev zone" && aws_route53_zone.this.force_destroy == true
+    error_message = "comment and force_destroy must follow the variables."
+  }
+}

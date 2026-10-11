@@ -11,11 +11,13 @@ Creates one **IAM role that AWS services can assume**, and attaches managed poli
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
-| `name` | string | — | Full role name (≤ 64 chars) |
-| `description` | string | — | What the role is for (non-empty) |
-| `trusted_services` | list(string) | — | Service principals, e.g. `["ecs-tasks.amazonaws.com"]` |
-| `policy_arns` | map(string) | `{}` | Policies to attach, keyed by a static name |
-| `enable_source_account_condition` | bool | `true` | Add the `aws:SourceAccount` condition to the trust policy |
+| `name` | string | — (required) | Full role name, e.g. attendance-service-dev-use1-ecs-task. |
+| `description` | string | — (required) | What the role is for. |
+| `trusted_services` | list(string) | — (required) | AWS service principals allowed to assume the role, e.g. ["ecs-tasks.amazonaws.com"]. |
+| `policy_arns` | map(string) | `{}` | Managed policies to attach, keyed by a static name (keys must be known at plan time), e.g. { dynamodb = module.dax_policy.arn }. |
+| `enable_source_account_condition` | bool | `true` | Add an aws:SourceAccount condition to the trust policy (confused-deputy protection). Turn off only for services that do not send aws:SourceAccount. |
+| `path` | string | `"/"` | IAM path for the role. |
+| `max_session_duration` | number | `3600` | Maximum session duration in seconds for credentials issued for this role. |
 
 ## Outputs
 

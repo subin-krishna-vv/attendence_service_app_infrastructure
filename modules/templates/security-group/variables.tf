@@ -58,3 +58,14 @@ variable "ingress_rules" {
     error_message = "Ports must be within 0-65535 and from_port must be <= to_port."
   }
 }
+
+variable "egress_cidr_ipv4" {
+  description = "IPv4 CIDR all outbound traffic is allowed to."
+  type        = string
+  default     = "0.0.0.0/0"
+
+  validation {
+    condition     = can(cidrhost(var.egress_cidr_ipv4, 0))
+    error_message = "egress_cidr_ipv4 must be a valid IPv4 CIDR block."
+  }
+}

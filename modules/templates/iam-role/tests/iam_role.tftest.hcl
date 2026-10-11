@@ -93,3 +93,36 @@ run "rejects_non_service_principal" {
 
   expect_failures = [var.trusted_services]
 }
+
+run "defaults_path_and_session_duration" {
+  command = plan
+
+  assert {
+    condition     = aws_iam_role.this.path == "/" && aws_iam_role.this.max_session_duration == 3600
+    error_message = "Defaults must be path / and a 3600 s session."
+  }
+}
+
+run "overrides_path_and_session_duration" {
+  command = plan
+
+  variables {
+    path                 = "/attendance-service/"
+    max_session_duration = 7200
+  }
+
+  assert {
+    condition     = aws_iam_role.this.path == "/attendance-service/" && aws_iam_role.this.max_session_duration == 7200
+    error_message = "path and max_session_duration must follow the variables."
+  }
+}
+
+run "rejects_invalid_path" {
+  command = plan
+
+  variables {
+    path = "attendance-service"
+  }
+
+  expect_failures = [var.path]
+}

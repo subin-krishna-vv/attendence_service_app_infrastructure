@@ -1,0 +1,12 @@
+project                                = "attendance-service"
+env                                    = "dev"
+owner                                  = "devops-team"
+company                                = "abc"
+region                                 = "us-east-1"
+noncurrent_version_expiration_days     = 90
+abort_incomplete_multipart_upload_days = 7
+force_destroy                          = false
+enable_versioning                      = true
+sse_algorithm                          = "AES256"
+object_ownership                       = "BucketOwnerEnforced"
+block_public_access                    = true

@@ -148,3 +148,26 @@ run "rejects_empty_rule_description" {
 
   expect_failures = [var.ingress_rules]
 }
+
+run "overrides_egress_cidr" {
+  command = plan
+
+  variables {
+    egress_cidr_ipv4 = "10.10.0.0/16"
+  }
+
+  assert {
+    condition     = aws_vpc_security_group_egress_rule.all.cidr_ipv4 == "10.10.0.0/16"
+    error_message = "Egress CIDR must follow the variable."
+  }
+}
+
+run "rejects_invalid_egress_cidr" {
+  command = plan
+
+  variables {
+    egress_cidr_ipv4 = "not-a-cidr"
+  }
+
+  expect_failures = [var.egress_cidr_ipv4]
+}

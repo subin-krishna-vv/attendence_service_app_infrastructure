@@ -1,5 +1,5 @@
 output "zone_id" {
-  description = "Hosted zone ID for dev.attendance.<base_domain>, used by the regional stacks (ACM validation) and global-dns."
+  description = "Hosted zone ID for <env>.<service_subdomain>.<base_domain>, used by the regional stacks (ACM validation) and global-dns."
   value       = module.dns_zone.zone_id
 }
 

@@ -14,17 +14,11 @@ The module uses the per-rule resources (`aws_vpc_security_group_*_rule`) rather 
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
-| `name` | string | — | Full SG name; must not start with `sg-` |
-| `description` | string | — | What the group protects. Changing it **replaces** the group. |
-| `vpc_id` | string | — | VPC ID |
-| `ingress_rules` | map(object) | `{}` | Inbound rules keyed by a static name (see below) |
-
-Each `ingress_rules` entry has:
-
-- `description` (required, non-empty)
-- `from_port` and `to_port` (0–65535, with from ≤ to)
-- `ip_protocol` (`tcp` by default, or `udp`; all-protocol `-1` is rejected)
-- **exactly one** source: `referenced_security_group_id` (preferred) or `cidr_ipv4`
+| `name` | string | — (required) | Full security group name, e.g. attendance-service-dev-use1-alb. |
+| `description` | string | — (required) | What the security group protects. Changing it replaces the group. |
+| `vpc_id` | string | — (required) | ID of the VPC the security group belongs to. |
+| `ingress_rules` | map(object) | `{}` | Inbound rules keyed by a static name. Each rule needs a description and exactly one source: referenced_security_group_id (preferred) or cidr_ipv4. ip_protocol is tcp (default) or udp. |
+| `egress_cidr_ipv4` | string | `"0.0.0.0/0"` | IPv4 CIDR all outbound traffic is allowed to. |
 
 ## Outputs
 

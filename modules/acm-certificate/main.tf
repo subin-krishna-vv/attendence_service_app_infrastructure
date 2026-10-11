@@ -7,7 +7,7 @@ resource "aws_acm_certificate" "this" {
   domain_name               = var.domain_name
   subject_alternative_names = var.enable_wildcard ? ["*.${var.domain_name}"] : []
   validation_method         = "DNS"
-  key_algorithm             = "RSA_2048"
+  key_algorithm             = var.key_algorithm
 
   tags = {
     Name = var.domain_name
@@ -31,7 +31,7 @@ resource "aws_route53_record" "validation" {
   name            = each.value.name
   type            = each.value.type
   records         = [each.value.record]
-  ttl             = 60
+  ttl             = var.validation_record_ttl
   allow_overwrite = true
 }
 

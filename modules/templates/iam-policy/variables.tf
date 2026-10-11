@@ -27,3 +27,14 @@ variable "policy_json" {
     error_message = "policy_json must be valid JSON."
   }
 }
+
+variable "path" {
+  description = "IAM path for the policy."
+  type        = string
+  default     = "/"
+
+  validation {
+    condition     = can(regex("^/([A-Za-z0-9+=,.@_-]+/)*$", var.path))
+    error_message = "path must start and end with / (e.g. / or /attendance-service/)."
+  }
+}

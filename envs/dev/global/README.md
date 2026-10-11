@@ -14,13 +14,16 @@ S3 backend `attendance-service-dev-tfstate-abc`, key `global/terraform.tfstate`,
 
 ## Inputs
 
-| Name | Default | Description |
-| --- | --- | --- |
-| `base_domain` | — (required) | e.g. `example.com` |
-| `project` / `env` / `owner` | `attendance-service` / `dev` / `devops-team` | Tags and naming |
-| `region` | `us-east-1` | Provider region |
-
-Set `base_domain` in a local `terraform.tfvars`, which is gitignored. Copy it from `terraform.tfvars.example`.
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `project` | string | `"attendance-service"` | Project name, used for the `project` tag. |
+| `env` | string | `"dev"` | Environment name, used in the domain name and the `env` tag. |
+| `owner` | string | `"devops-team"` | Owning team, used for the `owner` tag. |
+| `region` | string | `"us-east-1"` | Provider region for global resources. |
+| `base_domain` | string | — (required) | Base domain the service lives under, e.g. example.com. The dev zone is dev.attendance.<base_domain>. |
+| `service_subdomain` | string | `"attendance"` | Subdomain label of the service under base_domain. The env zone is <env>.<service_subdomain>.<base_domain>. |
+| `zone_comment` | string | `null` | Hosted zone comment; null uses the module default. |
+| `zone_force_destroy` | bool | `false` | Delete all records when the zone is destroyed. Keep false. |
 
 ## Usage
 

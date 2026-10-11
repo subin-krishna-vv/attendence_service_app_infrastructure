@@ -6,9 +6,10 @@ Creates one **customer-managed IAM policy** from a JSON document. Per the repo r
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
-| `name` | string | — | Full policy name (`<project>-<env>-<region_short>-<component>`) |
-| `description` | string | — | What the policy grants and why (non-empty) |
-| `policy_json` | string | — | Policy document JSON (validated to parse) |
+| `name` | string | — (required) | Full policy name, e.g. attendance-service-dev-use1-dax-dynamodb. |
+| `description` | string | — (required) | What the policy grants and why. |
+| `policy_json` | string | — (required) | IAM policy document as JSON (e.g. from data.aws_iam_policy_document.*.json or jsonencode). |
+| `path` | string | `"/"` | IAM path for the policy. |
 
 ## Outputs
 

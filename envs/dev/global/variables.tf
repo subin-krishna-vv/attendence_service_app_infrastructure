@@ -36,3 +36,26 @@ variable "base_domain" {
     error_message = "base_domain must be a lowercase domain name without a trailing dot, e.g. example.com."
   }
 }
+
+variable "service_subdomain" {
+  description = "Subdomain label of the service under base_domain. The env zone is <env>.<service_subdomain>.<base_domain>."
+  type        = string
+  default     = "attendance"
+
+  validation {
+    condition     = can(regex("^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$", var.service_subdomain))
+    error_message = "service_subdomain must be a single lowercase DNS label."
+  }
+}
+
+variable "zone_comment" {
+  description = "Hosted zone comment; null uses the module default."
+  type        = string
+  default     = null
+}
+
+variable "zone_force_destroy" {
+  description = "Delete all records when the zone is destroyed. Keep false."
+  type        = bool
+  default     = false
+}

@@ -4,13 +4,15 @@ Creates one **public Route 53 hosted zone**. Each environment gets its own zone 
 
 ## Resources
 
-- `aws_route53_zone.this`: public zone, `force_destroy = false`
+- `aws_route53_zone.this`: public zone (`force_destroy` defaults to `false`)
 
 ## Inputs
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
-| `domain_name` | string | — | Lowercase FQDN without a trailing dot |
+| `domain_name` | string | — (required) | Fully qualified domain name of the public hosted zone, e.g. dev.attendance.example.com (no trailing dot). |
+| `comment` | string | `null` | Zone comment. Defaults to "Public zone for <domain_name>" when null. |
+| `force_destroy` | bool | `false` | Delete all records (including ones Terraform does not manage) when the zone is destroyed. Keep false. |
 
 ## Outputs
 

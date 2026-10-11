@@ -19,12 +19,18 @@ This stack uses **local state**, because the bucket it creates does not exist ye
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
-| `project` | string | `attendance-service` | Naming prefix and `project` tag |
-| `env` | string | `dev` | Environment (`dev`, `staging`, `prod`) |
-| `company` | string | `abc` | Company name; state bucket name suffix for global uniqueness |
-| `owner` | string | `devops-team` | `owner` tag |
-| `region` | string | `us-east-1` | Region of the state bucket |
-| `noncurrent_version_expiration_days` | number | `90` | Days to keep previous state versions |
+| `project` | string | `"attendance-service"` | Project name, used as the naming prefix and the `project` tag. |
+| `env` | string | `"dev"` | Environment name, used in the bucket name and the `env` tag. |
+| `company` | string | `"abc"` | Company name, used as the state bucket name suffix to keep it globally unique. |
+| `owner` | string | `"devops-team"` | Owning team, used for the `owner` tag. |
+| `region` | string | `"us-east-1"` | AWS region for the state bucket. Holds state for every stack in the environment. |
+| `noncurrent_version_expiration_days` | number | `90` | Days to keep noncurrent (previous) state file versions before they expire. |
+| `force_destroy` | bool | `false` | Allow Terraform to delete the state bucket even when it holds objects. Keep false. |
+| `enable_versioning` | bool | `true` | Keep previous versions of every state file (needed to roll back a bad apply). |
+| `sse_algorithm` | string | `"AES256"` | Default server-side encryption: AES256 (SSE-S3) or aws:kms (SSE-KMS with the AWS-managed aws/s3 key). |
+| `object_ownership` | string | `"BucketOwnerEnforced"` | S3 Object Ownership setting. BucketOwnerEnforced disables ACLs. |
+| `abort_incomplete_multipart_upload_days` | number | `7` | Days after which incomplete multipart uploads are aborted. |
+| `block_public_access` | bool | `true` | Turn on all four S3 Block Public Access settings for the bucket. |
 
 ## Outputs
 

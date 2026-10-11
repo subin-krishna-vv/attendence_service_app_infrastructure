@@ -77,6 +77,13 @@ envs/<env>/             global, us-east-1, us-east-2, global-dns (module blocks 
 
 State: one S3 bucket per environment (`attendance-service-<env>-tfstate-<company>`), key `<stack>/terraform.tfstate`, native S3 locking (`use_lockfile = true`).
 
+## Configuration
+
+- **Every tunable setting is a module variable** with a sensible default. Override it in the env stack's `main.tf` module block, or expose it as a stack variable and set it in that stack's `terraform.tfvars`.
+- **`terraform.tfvars` is gitignored.** Each stack commits a `terraform.tfvars.example` listing its settings.
+- **Terraform doesn't allow variables in a few places**, so these stay literal in code: `backend` blocks, `required_version` and provider version constraints, and `lifecycle` meta-arguments (`prevent_destroy`, `create_before_destroy`).
+- **AWS protocol constants stay fixed**, because changing them would break the resource. Examples: `sts:AssumeRole`, endpoint type `Gateway`, `0.0.0.0/0` default routes, the ELB log-delivery principal, and SSE-S3 on the ALB log bucket (the only encryption ALB access logs support).
+
 ## Checks
 
 Run in each stack or module directory:
@@ -113,6 +120,9 @@ These skips apply to the **whole repo**, not to a single resource:
 | CKV2_AWS_11 | VPC flow logs are not used (design decision) |
 | CKV2_AWS_38 | No DNSSEC on Route 53 hosted zones (would need a KMS key and a DS record at the parent DNS provider) |
 | CKV2_AWS_39 | No Route 53 query logging |
+| CKV_AWS_131 | ALB keeps the AWS default `drop_invalid_header_fields = false` (design decision) |
+| CKV_AWS_378 | ALB → target traffic is HTTP on port 80 inside the VPC; TLS ends at the ALB |
+| CKV2_AWS_28 | WAF is attached by the separate `waf` module, which Checkov can't link to the ALB |
 | CKV_AWS_394 | The AZ list isn't pinned. The VPC takes the first 3 AZs sorted by name, and new AZs get later letters, so the selection doesn't change. |
 
 Because the skips are repo-wide, check this table when adding a new module so that a real finding isn't hidden.
@@ -122,6 +132,7 @@ Because the skips are repo-wide, check this table when adding a new module so th
 - **nginx runs as root on port 80** (the official image). Hardening path: an unprivileged image on 8080, a read-only root filesystem, and dropping all Linux capabilities.
 - **Images are pulled from Docker Hub through NAT.** This puts a public dependency in the scaling path, and anonymous pull rate limits apply. Moving to ECR (with ECR interface endpoints) is the hardening path.
 - **No interface endpoints** (ECR, CloudWatch Logs). Container logs reach CloudWatch through the NAT gateway.
+- **ALB uses AWS defaults for invalid-header dropping and desync mitigation** (`defensive`), and forwards plain HTTP to the tasks.
 - **No VPC flow logs.** Network traffic is not logged at VPC level.
 - **Security groups allow all outbound traffic.** Inbound rules (security-group sources wherever possible) are the control point. See [modules/templates/security-group](modules/templates/security-group/README.md).
 - **One AWS account hosts all environments.** Separate accounts per environment are the production target.

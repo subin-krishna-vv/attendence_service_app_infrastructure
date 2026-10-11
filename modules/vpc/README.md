@@ -4,6 +4,8 @@ Creates one region's network: a `/16` VPC with **3 public and 3 private `/20` su
 
 ## Resources
 
+Counts and CIDRs shown are for the defaults (`az_count = 3`, `subnet_newbits = 4`, offsets 0 and 8); each can be overridden (see Inputs).
+
 | Resource | Count | Purpose |
 | --- | --- | --- |
 | `aws_vpc.this` | 1 | DNS support and hostnames on |
@@ -35,11 +37,18 @@ Each `/20` has 4,091 usable IPs. Every Fargate task uses one IP.
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
-| `name_prefix` | string | — | Name tag prefix, e.g. `attendance-service-dev-use1` |
-| `vpc_cidr` | string | — | `/16` network address, e.g. `10.10.0.0/16` |
-| `enable_nat_gateway` | bool | `true` | Create the regional NAT gateway and the private default route |
-| `enable_s3_endpoint` | bool | `true` | Create the S3 gateway endpoint |
-| `enable_dynamodb_endpoint` | bool | `true` | Create the DynamoDB gateway endpoint |
+| `name_prefix` | string | — (required) | Prefix for resource Name tags: <project>-<env>-<region_short>, e.g. attendance-service-dev-use1. |
+| `vpc_cidr` | string | — (required) | VPC CIDR block. Must be a /16 that does not overlap any other environment or region (see README CIDR plan). |
+| `enable_nat_gateway` | bool | `true` | Create the regional NAT gateway and the private subnets' default route through it. |
+| `enable_s3_endpoint` | bool | `true` | Create the S3 gateway endpoint on the private route table. |
+| `enable_dynamodb_endpoint` | bool | `true` | Create the DynamoDB gateway endpoint on the private route table. |
+| `az_count` | number | `3` | Number of Availability Zones (first N standard AZs by name); one public and one private subnet per AZ. |
+| `subnet_newbits` | number | `4` | Bits added to the VPC prefix for each subnet (4 on a /16 gives /20 subnets). |
+| `public_subnet_offset` | number | `0` | cidrsubnet index of the first public subnet; public subnets take az_count consecutive indexes from here. |
+| `private_subnet_offset` | number | `8` | cidrsubnet index of the first private subnet; private subnets take az_count consecutive indexes from here. |
+| `enable_dns_support` | bool | `true` | Enable the Amazon-provided DNS resolver in the VPC (needed for gateway endpoints and private DNS). |
+| `enable_dns_hostnames` | bool | `true` | Give instances and ENIs public/private DNS hostnames. |
+| `map_public_ip_on_launch` | bool | `false` | Auto-assign public IPv4 addresses to ENIs launched in the subnets. Keep false: the ALB and NAT do not need it. |
 
 ## Outputs
 

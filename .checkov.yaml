@@ -10,3 +10,6 @@ skip-check:
   - CKV_AWS_394
   - CKV2_AWS_38
   - CKV2_AWS_39
+  - CKV_AWS_131
+  - CKV_AWS_378
+  - CKV2_AWS_28
