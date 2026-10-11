@@ -1,7 +1,5 @@
-data "aws_caller_identity" "current" {}
-
 locals {
-  state_bucket_name = "${var.project}-${var.env}-tfstate-${data.aws_caller_identity.current.account_id}"
+  state_bucket_name = "${var.project}-${var.env}-tfstate-${var.company}"
 }
 
 resource "aws_s3_bucket" "state" {

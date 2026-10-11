@@ -20,6 +20,17 @@ variable "env" {
   }
 }
 
+variable "company" {
+  description = "Company name, used as the state bucket name suffix to keep it globally unique."
+  type        = string
+  default     = "abc"
+
+  validation {
+    condition     = can(regex("^[a-z0-9][a-z0-9-]*[a-z0-9]$", var.company))
+    error_message = "company must be lowercase alphanumeric with hyphens (S3 bucket naming rules)."
+  }
+}
+
 variable "owner" {
   description = "Owning team, used for the `owner` tag."
   type        = string

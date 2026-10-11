@@ -8,7 +8,7 @@ This stack uses **local state**, because the bucket it creates does not exist ye
 
 | Resource | Purpose |
 | --- | --- |
-| `aws_s3_bucket.state` | `<project>-<env>-tfstate-<account_id>`; `force_destroy = false`, `prevent_destroy = true` |
+| `aws_s3_bucket.state` | `<project>-<env>-tfstate-<company>` (e.g. `attendance-service-dev-tfstate-abc`); `force_destroy = false`, `prevent_destroy = true` |
 | `aws_s3_bucket_versioning.state` | Versioning enabled, so every state write can be rolled back |
 | `aws_s3_bucket_server_side_encryption_configuration.state` | SSE-S3: Amazon S3 managed keys (AES-256) |
 | `aws_s3_bucket_public_access_block.state` | All four public-access blocks on |
@@ -21,6 +21,7 @@ This stack uses **local state**, because the bucket it creates does not exist ye
 | --- | --- | --- | --- |
 | `project` | string | `attendance-service` | Naming prefix and `project` tag |
 | `env` | string | `dev` | Environment (`dev`, `staging`, `prod`) |
+| `company` | string | `abc` | Company name; state bucket name suffix for global uniqueness |
 | `owner` | string | `devops-team` | `owner` tag |
 | `region` | string | `us-east-1` | Region of the state bucket |
 | `noncurrent_version_expiration_days` | number | `90` | Days to keep previous state versions |
@@ -52,7 +53,7 @@ Backend block for later stacks (one key per stack):
 ```hcl
 terraform {
   backend "s3" {
-    bucket       = "attendance-service-dev-tfstate-<account_id>"
+    bucket       = "attendance-service-dev-tfstate-abc"
     key          = "us-east-1/terraform.tfstate"
     region       = "us-east-1"
     encrypt      = true

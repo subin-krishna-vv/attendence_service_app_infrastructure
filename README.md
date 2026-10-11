@@ -59,7 +59,7 @@ bootstrap/<env>/        per-environment S3 state bucket (local state, applied on
 modules/templates/      security-group, iam-role, iam-policy (the only place SGs/IAM are declared)
 modules/<component>/    vpc (incl. gateway endpoints), acm-certificate, alb, waf, ecs-service,
                         dynamodb-global-table, dax, observability, route53-latency
-envs/<env>/             global-data, us-east-1, us-east-2, global-dns (module blocks only)
+envs/<env>/             global, us-east-1, us-east-2, global-dns (module blocks only)
 ```
 
 ## Prerequisites
@@ -71,11 +71,11 @@ envs/<env>/             global-data, us-east-1, us-east-2, global-dns (module bl
 ## Apply order (per environment)
 
 1. `bootstrap/<env>`, once
-2. `envs/<env>/global-data`
+2. `envs/<env>/global`, then delegate `<env>.attendance.<base_domain>` with NS records at the base domain's DNS provider
 3. `envs/<env>/us-east-1`, then `envs/<env>/us-east-2`
 4. `envs/<env>/global-dns`
 
-State: one S3 bucket per environment (`attendance-service-<env>-tfstate-<account_id>`), key `<stack>/terraform.tfstate`, native S3 locking (`use_lockfile = true`).
+State: one S3 bucket per environment (`attendance-service-<env>-tfstate-<company>`), key `<stack>/terraform.tfstate`, native S3 locking (`use_lockfile = true`).
 
 ## Checks
 
@@ -111,6 +111,8 @@ These skips apply to the **whole repo**, not to a single resource:
 | CKV2_AWS_62 | No consumer for S3 event notifications |
 | CKV2_AWS_5 | The security-group template doesn't attach its group; callers do |
 | CKV2_AWS_11 | VPC flow logs are not used (design decision) |
+| CKV2_AWS_38 | No DNSSEC on Route 53 hosted zones (would need a KMS key and a DS record at the parent DNS provider) |
+| CKV2_AWS_39 | No Route 53 query logging |
 | CKV_AWS_394 | The AZ list isn't pinned. The VPC takes the first 3 AZs sorted by name, and new AZs get later letters, so the selection doesn't change. |
 
 Because the skips are repo-wide, check this table when adding a new module so that a real finding isn't hidden.
