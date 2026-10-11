@@ -123,6 +123,7 @@ These skips apply to the **whole repo**, not to a single resource:
 | CKV_AWS_131 | ALB keeps the AWS default `drop_invalid_header_fields = false` (design decision) |
 | CKV_AWS_378 | ALB → target traffic is HTTP on port 80 inside the VPC; TLS ends at the ALB |
 | CKV2_AWS_28 | WAF is attached by the separate `waf` module, which Checkov can't link to the ALB |
+| CKV_AWS_338 | CloudWatch log groups keep logs for less than 1 year (WAF logs: 30 days, design decision) |
 | CKV_AWS_394 | The AZ list isn't pinned. The VPC takes the first 3 AZs sorted by name, and new AZs get later letters, so the selection doesn't change. |
 
 Because the skips are repo-wide, check this table when adding a new module so that a real finding isn't hidden.
