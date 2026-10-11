@@ -70,7 +70,7 @@ envs/<env>/             global, us-east-1, us-east-2, global-dns (module blocks 
 
 ## Apply order (per environment)
 
-1. `bootstrap/<env>`, once
+1. `bootstrap/<env>`, once (copy `terraform.tfvars.example` to `terraform.tfvars` in every stack first)
 2. `envs/<env>/global`, then delegate `<env>.attendance.<base_domain>` with NS records at the base domain's DNS provider
 3. `envs/<env>/us-east-1`, then `envs/<env>/us-east-2`
 4. `envs/<env>/global-dns`
@@ -96,7 +96,7 @@ tflint --config="$(git rev-parse --show-toplevel)/.tflint.hcl"
 terraform test
 ```
 
-`terraform test` applies to modules only. It uses mock providers, so it has no AWS cost.
+`terraform test` runs in every module and in the regional stacks (`envs/dev/us-east-1`, `envs/dev/us-east-2`), where it plans the whole wiring. It uses mock providers, so it has no AWS cost.
 
 Checkov runs once from the repo root:
 
@@ -125,6 +125,7 @@ These skips apply to the **whole repo**, not to a single resource:
 | CKV2_AWS_28 | WAF is attached by the separate `waf` module, which Checkov can't link to the ALB |
 | CKV_AWS_338 | CloudWatch log groups keep logs for less than 1 year (WAF logs: 30 days, design decision) |
 | CKV_AWS_249 | False positive: the ECS execution and task roles are separate (both come from the iam-role template); a unit test proves they differ |
+| CKV_AWS_65 | False positive: Container Insights is on by default (unit-tested in `ecs-service`), but Checkov can't resolve values passed from an env stack's variables into a module |
 | CKV_AWS_394 | The AZ list isn't pinned. The VPC takes the first 3 AZs sorted by name, and new AZs get later letters, so the selection doesn't change. |
 
 Because the skips are repo-wide, check this table when adding a new module so that a real finding isn't hidden.
