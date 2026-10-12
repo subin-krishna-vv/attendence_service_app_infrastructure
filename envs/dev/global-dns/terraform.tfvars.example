@@ -7,6 +7,7 @@ service_subdomain          = "attendance"
 enable_dns_records         = true
 enable_health_checks       = true
 enable_health_check_alarms = true
+enable_sns                 = true
 alarm_topic_name           = "attendance-service-dev-use1-alarms"
 enable_dashboard           = true
 dashboard_name             = "attendance-service-dev"

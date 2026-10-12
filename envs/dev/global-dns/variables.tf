@@ -79,6 +79,12 @@ variable "enable_health_check_alarms" {
   default     = true
 }
 
+variable "enable_sns" {
+  description = "Send health check alarms to the us-east-1 SNS topic. Set false when the regional stacks use enable_sns = false (the topic then does not exist)."
+  type        = bool
+  default     = true
+}
+
 variable "alarm_topic_name" {
   description = "Existing us-east-1 SNS topic (from the us-east-1 observability module) that health check alarms notify."
   type        = string

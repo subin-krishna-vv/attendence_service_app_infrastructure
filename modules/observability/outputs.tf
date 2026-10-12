@@ -1,6 +1,6 @@
 output "alarm_topic_arn" {
-  description = "ARN of the SNS topic alarms notify."
-  value       = aws_sns_topic.alarms.arn
+  description = "ARN of the SNS topic alarms notify, or null when enable_sns is false."
+  value       = one(aws_sns_topic.alarms[*].arn)
 }
 
 output "alarm_names" {

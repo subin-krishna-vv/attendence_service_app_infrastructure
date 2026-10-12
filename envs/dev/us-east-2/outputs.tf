@@ -49,6 +49,6 @@ output "ecs_service_name" {
 }
 
 output "alarm_topic_arn" {
-  description = "ARN of the SNS alarm topic."
+  description = "ARN of the SNS alarm topic, or null when enable_sns is false."
   value       = module.observability.alarm_topic_arn
 }

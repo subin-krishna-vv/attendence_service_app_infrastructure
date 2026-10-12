@@ -33,7 +33,7 @@ Values shown are the variable defaults; each can be overridden (see Inputs).
 | `health_check_measure_latency` | bool | `false` | Publish Route 53 checker latency metrics (extra cost). |
 | `health_check_regions` | list(string) | `null` | Route 53 checker regions (at least 3). null uses all checker regions. |
 | `enable_health_check_alarms` | bool | `true` | Create a CloudWatch alarm per health check. Route 53 health check metrics only exist in us-east-1, so the provider must be us-east-1. |
-| `alarm_topic_name` | string | `null` | Name of an existing SNS topic in the provider region that health check alarms notify (e.g. attendance-service-dev-use1-alarms). Required when alarms are enabled. |
+| `alarm_topic_name` | string | `null` | Name of an existing SNS topic in the provider region that health check alarms notify (e.g. attendance-service-dev-use1-alarms). null creates the alarms without notifications. |
 | `alarm_period` | number | `60` | Seconds per evaluation period of the health check alarms. |
 | `alarm_evaluation_periods` | number | `1` | Periods a health check must be unhealthy before its alarm fires. |
 
@@ -51,6 +51,8 @@ Values shown are the variable defaults; each can be overridden (see Inputs).
 | --- | --- | --- |
 | `enable_health_checks` | `true` | No health checks or alarms. Records rely only on `evaluate_target_health` (the ALB's own target health). |
 | `enable_health_check_alarms` | `true` | Health checks stay, with no CloudWatch alarms |
+
+If `alarm_topic_name` is `null`, the alarms are still created but have no notification actions.
 
 ## Example
 

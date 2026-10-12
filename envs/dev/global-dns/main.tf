@@ -11,7 +11,7 @@ module "route53_latency" {
   regions                    = var.regions
   enable_health_checks       = var.enable_health_checks
   enable_health_check_alarms = var.enable_health_check_alarms
-  alarm_topic_name           = var.enable_health_checks && var.enable_health_check_alarms ? var.alarm_topic_name : null
+  alarm_topic_name           = var.enable_health_checks && var.enable_health_check_alarms && var.enable_sns ? var.alarm_topic_name : null
 }
 
 module "dashboard" {

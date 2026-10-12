@@ -128,14 +128,9 @@ variable "enable_health_check_alarms" {
 }
 
 variable "alarm_topic_name" {
-  description = "Name of an existing SNS topic in the provider region that health check alarms notify (e.g. attendance-service-dev-use1-alarms). Required when alarms are enabled."
+  description = "Name of an existing SNS topic in the provider region that health check alarms notify (e.g. attendance-service-dev-use1-alarms). null creates the alarms without notifications."
   type        = string
   default     = null
-
-  validation {
-    condition     = !(var.enable_health_checks && var.enable_health_check_alarms) || var.alarm_topic_name != null
-    error_message = "alarm_topic_name is required when health checks and their alarms are enabled."
-  }
 }
 
 variable "alarm_period" {

@@ -29,6 +29,7 @@ Every alarm sends both **ALARM** and **OK** notifications to the topic. Missing 
 | `ecs_cluster_name` | string | — (required) | Name of the ECS cluster (ClusterName metric dimension). |
 | `ecs_service_name` | string | — (required) | Name of the ECS service (ServiceName metric dimension). |
 | `alarm_emails` | list(string) | `[]` | Email addresses subscribed to the alarm topic. Each address must confirm the subscription email from AWS. |
+| `enable_sns` | bool | `true` | Create the SNS alarm topic and its email subscriptions. When false, alarms still exist in CloudWatch but notify no one. |
 | `sns_kms_master_key_id` | string | `null` | Customer-managed KMS key for the alarm topic. null leaves the topic unencrypted (CloudWatch cannot publish to a topic encrypted with the AWS-managed aws/sns key). |
 | `enable_alarms` | bool | `true` | Create the SLO and supporting CloudWatch alarms. |
 | `treat_missing_data` | string | `"notBreaching"` | How alarms treat periods with no data. |
@@ -52,7 +53,7 @@ Every alarm sends both **ALARM** and **OK** notifications to the topic. Missing 
 
 | Name | Description |
 | --- | --- |
-| `alarm_topic_arn` | SNS topic ARN (other alarms, e.g. Route 53 health checks, can publish here) |
+| `alarm_topic_arn` | SNS topic ARN (other alarms, e.g. Route 53 health checks, can publish here), or `null` when `enable_sns` is false |
 | `alarm_names` | Alarm names keyed by purpose; empty when alarms are off |
 
 ## Toggles
@@ -60,6 +61,7 @@ Every alarm sends both **ALARM** and **OK** notifications to the topic. Missing 
 | Toggle | Default | Effect when `false` |
 | --- | --- | --- |
 | `enable_alarms` | `true` | No alarms. The topic and subscriptions remain. |
+| `enable_sns` | `true` | No SNS topic and no email subscriptions. Alarms still exist in CloudWatch, with no notification actions, and `alarm_topic_arn` is `null`. Use this while you don't have a real email address. |
 
 ## Example
 

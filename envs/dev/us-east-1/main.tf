@@ -83,6 +83,7 @@ module "observability" {
   ecs_cluster_name        = module.ecs_service.cluster_name
   ecs_service_name        = module.ecs_service.service_name
   enable_alarms           = var.enable_alarms
+  enable_sns              = var.enable_sns
   alarm_emails            = var.alarm_emails
   min_running_tasks       = var.min_capacity
 }

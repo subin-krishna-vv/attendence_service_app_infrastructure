@@ -40,3 +40,4 @@ enable_container_insights    = true
 container_log_retention_days = 30
 
 enable_alarms = true
+enable_sns    = true

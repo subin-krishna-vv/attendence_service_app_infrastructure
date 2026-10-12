@@ -13,7 +13,7 @@ data "aws_lb" "this" {
 }
 
 data "aws_sns_topic" "alarms" {
-  count = local.create_alarms ? 1 : 0
+  count = local.create_alarms && var.alarm_topic_name != null ? 1 : 0
 
   name = var.alarm_topic_name
 }
@@ -21,6 +21,7 @@ data "aws_sns_topic" "alarms" {
 locals {
   regions       = { for r in var.regions : r.region => r }
   create_alarms = var.enable_health_checks && var.enable_health_check_alarms
+  alarm_actions = [for t in data.aws_sns_topic.alarms : t.arn]
 }
 
 resource "aws_route53_health_check" "this" {
@@ -75,8 +76,8 @@ resource "aws_cloudwatch_metric_alarm" "health" {
   comparison_operator = "LessThanThreshold"
   threshold           = 1
   treat_missing_data  = "breaching"
-  alarm_actions       = [data.aws_sns_topic.alarms[0].arn]
-  ok_actions          = [data.aws_sns_topic.alarms[0].arn]
+  alarm_actions       = local.alarm_actions
+  ok_actions          = local.alarm_actions
 
   lifecycle {
     precondition {

@@ -228,6 +228,12 @@ variable "enable_alarms" {
   default     = true
 }
 
+variable "enable_sns" {
+  description = "Create the SNS alarm topic and email subscriptions. When false, alarms exist in CloudWatch but send no notifications (alarm_emails is ignored)."
+  type        = bool
+  default     = true
+}
+
 variable "alarm_emails" {
   description = "Email addresses notified by alarms. Set real addresses only in the gitignored terraform.tfvars."
   type        = list(string)

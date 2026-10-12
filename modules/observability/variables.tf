@@ -39,6 +39,12 @@ variable "alarm_emails" {
   }
 }
 
+variable "enable_sns" {
+  description = "Create the SNS alarm topic and its email subscriptions. When false, alarms still exist in CloudWatch but notify no one."
+  type        = bool
+  default     = true
+}
+
 variable "sns_kms_master_key_id" {
   description = "Customer-managed KMS key for the alarm topic. null leaves the topic unencrypted (CloudWatch cannot publish to a topic encrypted with the AWS-managed aws/sns key)."
   type        = string

@@ -25,6 +25,7 @@ S3 backend `attendance-service-dev-tfstate-abc`, key `global-dns/terraform.tfsta
 | `regions` | list(object) | see `variables.tf` | Regional stacks to route to and chart, with the name_prefix each used. |
 | `enable_health_checks` | bool | `true` | Create Route 53 health checks for each region's ALB. |
 | `enable_health_check_alarms` | bool | `true` | Create a CloudWatch alarm per health check. |
+| `enable_sns` | bool | `true` | Send health check alarms to the us-east-1 SNS topic. Set false when the regional stacks use enable_sns = false (the topic then does not exist). |
 | `alarm_topic_name` | string | `"attendance-service-dev-use1-alarms"` | Existing us-east-1 SNS topic (from the us-east-1 observability module) that health check alarms notify. |
 | `enable_dashboard` | bool | `true` | Create the cross-region CloudWatch dashboard. |
 | `dashboard_name` | string | `"attendance-service-dev"` | Name of the cross-region CloudWatch dashboard. |
@@ -55,6 +56,7 @@ terraform output service_url
 | --- | --- | --- |
 | `enable_dns_records` | `true` | No latency records, Route 53 health checks or health check alarms. `base_domain` is optional, and `service_url` is `null`. |
 | `enable_dashboard` | `true` | No cross-region dashboard (independent of DNS) |
+| `enable_sns` | `true` | Health check alarms have no notification actions. Required when the regional stacks use `enable_sns = false`, because the us-east-1 topic doesn't exist then. |
 
 ## Notes
 

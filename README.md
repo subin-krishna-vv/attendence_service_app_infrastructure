@@ -40,8 +40,7 @@ Both are request-based over a rolling 30 days. 4xx responses are excluded.
 | 3 | `envs/<env>/us-east-1`, `envs/<env>/us-east-2` | Network, certificate, ALB, WAF, ECS, alarms |
 | 4 | `envs/<env>/global-dns` | Latency DNS records, health checks, dashboard |
 
-- **Before you start:** copy `terraform.tfvars.example` to `terraform.tfvars` in each stack and set `base_domain` and `alarm_emails`.
-- **After step 2:** add the zone's NS records at your domain's DNS provider.
+See [Deploy step by step](#deploy-step-by-step) for the exact commands.
 
 ### Network
 
@@ -49,11 +48,130 @@ Each region has its own VPC (dev: `10.10.0.0/16` in us-east-1, `10.11.0.0/16` in
 
 ### On/off toggles
 
-Optional parts can be turned off in each stack's `terraform.tfvars`, for example `enable_waf`, `enable_certificate`, `enable_dns_zone`, `enable_dns_records` and `enable_dashboard`. All default to `true`. See each stack's README for the full list.
+Optional parts can be turned off in each stack's `terraform.tfvars`, for example `enable_waf`, `enable_certificate`, `enable_dns_zone`, `enable_dns_records`, `enable_dashboard` and `enable_sns` (alarm emails). All default to `true`. See each stack's README for the full list.
 
 ### Not built yet
 
 DynamoDB + DAX (data layer), smoke and load tests, and the staging/prod environments.
+
+## Deploy step by step
+
+These steps deploy the **dev** environment. Run every command from the repo root unless a step says otherwise.
+
+### 1. Prerequisites
+
+- Terraform `~> 1.16.1` (AWS provider `~> 6.68` is installed by `terraform init`).
+- [tflint](https://github.com/terraform-linters/tflint) and Docker (for [checkov](https://www.checkov.io/)). Only needed for the checks.
+- AWS credentials for the target account:
+
+  ```sh
+  export AWS_PROFILE=<your-profile>     # or log in with SSO
+  ```
+
+- A domain you control (`base_domain`, e.g. `example.com`), where you can add NS records at its DNS provider. If you have no domain, see [Run without a domain](#run-without-a-domain).
+
+### 2. Create the tfvars files
+
+```sh
+for d in bootstrap/dev envs/dev/global envs/dev/us-east-1 envs/dev/us-east-2 envs/dev/global-dns; do
+  cp "$d/terraform.tfvars.example" "$d/terraform.tfvars"
+done
+```
+
+Edit them (they are gitignored):
+
+| File | Set |
+| --- | --- |
+| `envs/dev/global/terraform.tfvars` | `base_domain` |
+| `envs/dev/us-east-1/terraform.tfvars` | `base_domain`, `alarm_emails` (real addresses) |
+| `envs/dev/us-east-2/terraform.tfvars` | `base_domain`, `alarm_emails` |
+| `envs/dev/global-dns/terraform.tfvars` | `base_domain` |
+
+If you change `company` (default `abc`), also change the backend `bucket` in every `envs/dev/*/versions.tf` to `attendance-service-dev-tfstate-<company>`.
+
+### 3. State bucket (once)
+
+```sh
+cd bootstrap/dev
+terraform init
+terraform plan
+terraform apply
+cd -
+```
+
+### 4. DNS zone
+
+```sh
+cd envs/dev/global
+terraform init
+terraform apply
+terraform output name_servers
+cd -
+```
+
+At your domain's DNS provider, add an **NS record** for `dev.attendance` with the 4 name servers from the output. Check it before continuing:
+
+```sh
+dig NS dev.attendance.<base_domain> +short     # must list the 4 awsdns servers
+```
+
+### 5. Regional stacks
+
+Apply us-east-1 first, then us-east-2:
+
+```sh
+for r in us-east-1 us-east-2; do
+  (cd envs/dev/$r && terraform init && terraform plan -out=tfplan && terraform apply tfplan)
+done
+```
+
+- Each apply waits for the ACM certificate to validate. This takes a few minutes once the NS delegation from step 4 works.
+- Each address in `alarm_emails` receives an **AWS Notification – Subscription Confirmation** email per region. Click the link, or alarms won't be delivered.
+- No real email yet? Set `enable_sns = false` in both regional stacks **and** in `envs/dev/global-dns`. Alarms are still created in CloudWatch, but send no notifications.
+
+### 6. Global DNS records and dashboard
+
+```sh
+cd envs/dev/global-dns
+terraform init
+terraform apply
+terraform output service_url
+cd -
+```
+
+### 7. Verify
+
+```sh
+curl -sI http://dev.attendance.<base_domain> | head -1      # HTTP/1.1 301 (redirect to HTTPS)
+curl -s https://dev.attendance.<base_domain> | grep -o "Welcome to nginx!"
+```
+
+In the AWS console, check:
+- **Route 53 → Health checks:** both are *Healthy*.
+- **ECS:** 3 tasks running in each region.
+- **CloudWatch → Dashboards → `attendance-service-dev`:** data for both regions.
+
+### Run without a domain
+
+Set these in the tfvars, and leave `base_domain` unset:
+
+| File | Set |
+| --- | --- |
+| `envs/dev/global/terraform.tfvars` | `enable_dns_zone = false` |
+| `envs/dev/us-east-1/terraform.tfvars`, `envs/dev/us-east-2/terraform.tfvars` | `enable_certificate = false` |
+| `envs/dev/global-dns/terraform.tfvars` | `enable_dns_records = false` |
+
+Then run steps 3, 5 and 6, and skip step 4. Each region serves HTTP at `terraform output alb_dns_name`, run in `envs/dev/us-east-1` or `envs/dev/us-east-2`.
+
+### Tear down (reverse order)
+
+1. `envs/dev/global-dns`: `terraform destroy`.
+2. Each regional stack:
+   1. Set `enable_alb_deletion_protection = false` in its tfvars and run `terraform apply`.
+   2. Empty the ALB access-log bucket `attendance-service-dev-<use1|use2>-alb-logs-<company>`, including object versions.
+   3. Run `terraform destroy`.
+3. `envs/dev/global`: `terraform destroy`, then remove the NS record at your DNS provider.
+4. `bootstrap/dev`: the state bucket is protected by `prevent_destroy`. Delete it manually only when no stack state is left.
 
 ## Repository layout
 
@@ -67,12 +185,6 @@ envs/<env>/             global, us-east-1, us-east-2, global-dns (module blocks 
 ```
 
 Every module and stack has a README with its inputs, outputs, toggles and design notes.
-
-## Prerequisites
-
-- Terraform `~> 1.16.1`, AWS provider `~> 6.68`.
-- [tflint](https://github.com/terraform-linters/tflint) (AWS ruleset pinned in `.tflint.hcl`) and Docker (for [checkov](https://www.checkov.io/)).
-- AWS credentials through the standard credential chain, e.g. `export AWS_PROFILE=<profile>` or an SSO session. No profile is hard-coded.
 
 ## Configuration
 

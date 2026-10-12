@@ -1,6 +1,6 @@
 locals {
   alarm_count = var.enable_alarms ? 1 : 0
-  alarm_topic = [aws_sns_topic.alarms.arn]
+  alarm_topic = var.enable_sns ? [aws_sns_topic.alarms[0].arn] : []
 
   alb_dimensions = {
     LoadBalancer = var.alb_arn_suffix
@@ -18,14 +18,16 @@ locals {
 }
 
 resource "aws_sns_topic" "alarms" {
+  count = var.enable_sns ? 1 : 0
+
   name              = "${var.name_prefix}-alarms"
   kms_master_key_id = var.sns_kms_master_key_id
 }
 
 resource "aws_sns_topic_subscription" "email" {
-  for_each = toset(var.alarm_emails)
+  for_each = var.enable_sns ? toset(var.alarm_emails) : toset([])
 
-  topic_arn = aws_sns_topic.alarms.arn
+  topic_arn = aws_sns_topic.alarms[0].arn
   protocol  = "email"
   endpoint  = each.value
 }

@@ -55,6 +55,10 @@ tflint --config="$(git rev-parse --show-toplevel)/.tflint.hcl"
 | `enable_certificate` | `true` | No ACM certificate. The ALB serves **HTTP only**: no HTTPS listener or redirect, and port 80 forwards to the tasks. Reach the service at `http://<alb_dns_name>`. `base_domain` is then optional. |
 | `enable_https` | `true` | HTTP only even when a certificate exists. HTTPS is on only when both `enable_https` and `enable_certificate` are true (see the `https_enabled` output). |
 
+## Alarm notifications toggle
+
+`enable_sns` (default `true`). When it's `false`, no SNS topic or email subscriptions are created, and `alarm_emails` is ignored. Alarms still show in CloudWatch, but notify no one. Also set `enable_sns = false` in `envs/dev/global-dns`, because its health check alarms use the us-east-1 topic.
+
 Turn the certificate off together with `enable_dns_zone = false` in `envs/dev/global` and `enable_dns_records = false` in `envs/dev/global-dns`. That's the setup for running dev with no domain.
 
 ## Outputs
