@@ -24,7 +24,7 @@ Regional stack for **dev in us-east-1**: the network, TLS certificate, ALB, WAF,
 cp terraform.tfvars.example terraform.tfvars
 ```
 
-- **`terraform.tfvars` is gitignored.** Put values that must not be committed there: `base_domain` and the real `alarm_emails`. The example lists every setting with its default.
+- **`terraform.tfvars` is gitignored.** Put values that must not be committed there: `base_domain` (required while `enable_certificate` is true) and the real `alarm_emails`. The example lists every setting with its default.
 - **Each email address must confirm** the subscription email from AWS before it receives alarms.
 - **Settings not exposed as stack variables** keep their module defaults. Override them in the module block in `main.tf`. See each module's README for the full list of inputs.
 
@@ -48,13 +48,23 @@ terraform init -backend=false && terraform validate
 tflint --config="$(git rev-parse --show-toplevel)/.tflint.hcl"
 ```
 
+## DNS and certificate toggles
+
+| Toggle | Default | Effect when `false` |
+| --- | --- | --- |
+| `enable_certificate` | `true` | No ACM certificate. The ALB serves **HTTP only**: no HTTPS listener or redirect, and port 80 forwards to the tasks. Reach the service at `http://<alb_dns_name>`. `base_domain` is then optional. |
+| `enable_https` | `true` | HTTP only even when a certificate exists. HTTPS is on only when both `enable_https` and `enable_certificate` are true (see the `https_enabled` output). |
+
+Turn the certificate off together with `enable_dns_zone = false` in `envs/dev/global` and `enable_dns_records = false` in `envs/dev/global-dns`. That's the setup for running dev with no domain.
+
 ## Outputs
 
 | Name | Description |
 | --- | --- |
 | `name_prefix` | `attendance-service-dev-use1`; must match `regions` in `envs/dev/global-dns` |
 | `vpc_id` | VPC ID |
-| `certificate_arn` | Validated certificate ARN |
+| `certificate_arn` | Validated certificate ARN, or `null` when `enable_certificate` is false |
+| `https_enabled` | Whether the ALB serves HTTPS |
 | `alb_dns_name` / `alb_zone_id` | Regional ALB endpoint |
 | `alb_access_logs_bucket` | ALB access-log bucket |
 | `web_acl_arn` | Web ACL ARN, or `null` when WAF is off |

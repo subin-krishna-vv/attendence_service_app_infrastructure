@@ -1,6 +1,7 @@
 locals {
-  name_prefix = "${var.project}-${var.env}-${var.region_short}"
-  domain_name = "${var.env}.${var.service_subdomain}.${var.base_domain}"
+  name_prefix   = "${var.project}-${var.env}-${var.region_short}"
+  domain_name   = var.base_domain == null ? null : "${var.env}.${var.service_subdomain}.${var.base_domain}"
+  https_enabled = var.enable_https && var.enable_certificate
 }
 
 module "vpc" {
@@ -16,6 +17,7 @@ module "vpc" {
 
 module "certificate" {
   source = "../../../modules/acm-certificate"
+  count  = var.enable_certificate ? 1 : 0
 
   domain_name     = local.domain_name
   zone_name       = local.domain_name
@@ -29,8 +31,8 @@ module "alb" {
   company                    = var.company
   vpc_id                     = module.vpc.vpc_id
   public_subnet_ids          = module.vpc.public_subnet_ids
-  certificate_arn            = var.enable_https ? module.certificate.certificate_arn : null
-  enable_https               = var.enable_https
+  certificate_arn            = local.https_enabled ? module.certificate[0].certificate_arn : null
+  enable_https               = local.https_enabled
   enable_access_logs         = var.enable_alb_access_logs
   access_log_retention_days  = var.alb_access_log_retention_days
   enable_deletion_protection = var.enable_alb_deletion_protection

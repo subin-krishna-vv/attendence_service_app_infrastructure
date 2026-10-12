@@ -9,8 +9,13 @@ output "vpc_id" {
 }
 
 output "certificate_arn" {
-  description = "ARN of the validated ACM certificate."
-  value       = module.certificate.certificate_arn
+  description = "ARN of the validated ACM certificate, or null when enable_certificate is false."
+  value       = one(module.certificate[*].certificate_arn)
+}
+
+output "https_enabled" {
+  description = "Whether the ALB serves HTTPS (enable_https and enable_certificate both true)."
+  value       = local.https_enabled
 }
 
 output "alb_dns_name" {

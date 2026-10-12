@@ -45,13 +45,25 @@ variable "region_short" {
 }
 
 variable "base_domain" {
-  description = "Base domain the service lives under, e.g. example.com. Set in the gitignored terraform.tfvars."
+  description = "Base domain the service lives under, e.g. example.com. Set in the gitignored terraform.tfvars. Required when enable_certificate is true."
   type        = string
+  default     = null
 
   validation {
-    condition     = can(regex("^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z]{2,63}$", var.base_domain))
+    condition     = var.base_domain == null || can(regex("^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z]{2,63}$", var.base_domain))
     error_message = "base_domain must be a lowercase domain name without a trailing dot, e.g. example.com."
   }
+
+  validation {
+    condition     = !var.enable_certificate || var.base_domain != null
+    error_message = "base_domain is required when enable_certificate is true."
+  }
+}
+
+variable "enable_certificate" {
+  description = "Create the ACM certificate for <env>.<service_subdomain>.<base_domain>. When false, the ALB serves HTTP only (no HTTPS listener or redirect)."
+  type        = bool
+  default     = true
 }
 
 variable "service_subdomain" {
@@ -97,7 +109,7 @@ variable "enable_wildcard_certificate" {
 }
 
 variable "enable_https" {
-  description = "Create the HTTPS listener and redirect HTTP to it."
+  description = "Create the HTTPS listener and redirect HTTP to it. Only takes effect when enable_certificate is true."
   type        = bool
   default     = true
 }

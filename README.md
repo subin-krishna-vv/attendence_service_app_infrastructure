@@ -1,6 +1,6 @@
 # Classroom Attendance Service — Infrastructure
 
-Terraform for an AWS-hosted Classroom attendance service. The service itself is simulated by the **default nginx welcome page**.
+Terraform for an AWS-hosted Classroom attendance service, running **active-active in two regions** (us-east-1 and us-east-2). The service itself is simulated by the **default nginx welcome page**.
 
 ## Service level objectives
 
@@ -14,68 +14,65 @@ Both are request-based over a rolling 30 days. 4xx responses are excluded.
 ## Architecture
 
 ```text
-                     Students and teachers
-                              |
-         Route 53: <env-based domain> (latency records + health checks)
-                 /                              \
-     us-east-1 (active)                    us-east-2 (active)
-     WAF -> ALB (public, 3 AZs, TLS)       WAF -> ALB (public, 3 AZs, TLS)
-            |                                     |
-     ECS Fargate, nginx :80                ECS Fargate, nginx :80
-       (private subnets, 3 AZs)              (private subnets, 3 AZs)
-            |                                     |
-     DAX (private subnets)                 DAX (private subnets)
-            |                                     |
-     DynamoDB replica  <== global table replication ==>  DynamoDB replica
+                    Users
+                      |
+        Route 53 (latency routing + health checks)
+              /                    \
+       us-east-1                  us-east-2
+     WAF -> ALB (HTTPS)        WAF -> ALB (HTTPS)
+           |                         |
+     ECS Fargate (nginx)       ECS Fargate (nginx)
+     private subnets, 3 AZs    private subnets, 3 AZs
 
-     Egress per region: one regional NAT gateway (auto mode, spans all 3 AZs)
-     Endpoints per region: S3 + DynamoDB gateway endpoints (free)
-     Observability: Amazon CloudWatch (SLIs, alarms, dashboards) across both regions
+     CloudWatch alarms + one dashboard for both regions
 ```
 
-### Network (per region)
+- **Both regions serve traffic.** Route 53 sends users to the nearest healthy region and moves traffic away from a failing one.
+- **Each region runs across 3 AZs.** ECS keeps 3–6 nginx tasks behind the ALB, with rolling deployments and automatic rollback.
+- **The SLOs are measured at the ALB.** Alarms email the team, and one dashboard shows both regions.
 
-| Environment | us-east-1 | us-east-2 |
+### Stacks (apply in this order)
+
+| # | Stack | Creates |
 | --- | --- | --- |
-| dev | `10.10.0.0/16` | `10.11.0.0/16` |
-| staging | `10.20.0.0/16` | `10.21.0.0/16` |
-| prod | `10.30.0.0/16` | `10.31.0.0/16` |
+| 1 | `bootstrap/<env>` | Terraform state bucket (once) |
+| 2 | `envs/<env>/global` | DNS zone `<env>.attendance.<base_domain>` |
+| 3 | `envs/<env>/us-east-1`, `envs/<env>/us-east-2` | Network, certificate, ALB, WAF, ECS, alarms |
+| 4 | `envs/<env>/global-dns` | Latency DNS records, health checks, dashboard |
 
-Each VPC has 3 public and 3 private `/20` subnets, one of each per AZ (the first 3 standard AZs by name). Public subnets use the lower half of the `/16` and private subnets the upper half. See [modules/vpc](modules/vpc/README.md).
+- **Before you start:** copy `terraform.tfvars.example` to `terraform.tfvars` in each stack and set `base_domain` and `alarm_emails`.
+- **After step 2:** add the zone's NS records at your domain's DNS provider.
 
-How this meets the SLOs:
+### Network
 
-- **Active-active across two regions.** Route 53 latency routing with health checks steers traffic away from a failed region.
-- **Three AZs per region.** Each region is sized to carry 100% of peak.
-- **Rolling deployments** at 100% minimum healthy, with circuit-breaker rollback.
-- **CloudWatch SLIs** are measured at the ALB, with alarms and a dashboard.
+Each region has its own VPC (dev: `10.10.0.0/16` in us-east-1, `10.11.0.0/16` in us-east-2). Each VPC has 3 public subnets (ALB) and 3 private subnets (ECS), one regional NAT gateway, and free S3/DynamoDB endpoints.
 
-The nginx placeholder does not read DynamoDB or DAX. The data layer, its networking and its IAM are provisioned so they are ready for the real service.
+### On/off toggles
+
+Optional parts can be turned off in each stack's `terraform.tfvars`, for example `enable_waf`, `enable_certificate`, `enable_dns_zone`, `enable_dns_records` and `enable_dashboard`. All default to `true`. See each stack's README for the full list.
+
+### Not built yet
+
+DynamoDB + DAX (data layer), smoke and load tests, and the staging/prod environments.
 
 ## Repository layout
 
 ```text
 bootstrap/<env>/        per-environment S3 state bucket (local state, applied once)
 modules/templates/      security-group, iam-role, iam-policy (the only place SGs/IAM are declared)
-modules/<component>/    vpc (incl. gateway endpoints), acm-certificate, alb, waf, ecs-service,
-                        dynamodb-global-table, dax, observability, dashboard, route53-latency
+modules/<component>/    vpc (incl. gateway endpoints and regional NAT), route53-zone,
+                        acm-certificate, alb, waf, ecs-service, observability,
+                        dashboard, route53-latency
 envs/<env>/             global, us-east-1, us-east-2, global-dns (module blocks only)
 ```
 
+Every module and stack has a README with its inputs, outputs, toggles and design notes.
+
 ## Prerequisites
 
-- Terraform `~> 1.16.1`, AWS provider `~> 6.68`
-- [tflint](https://github.com/terraform-linters/tflint) (AWS ruleset pinned in `.tflint.hcl`) and Docker (for [checkov](https://www.checkov.io/))
+- Terraform `~> 1.16.1`, AWS provider `~> 6.68`.
+- [tflint](https://github.com/terraform-linters/tflint) (AWS ruleset pinned in `.tflint.hcl`) and Docker (for [checkov](https://www.checkov.io/)).
 - AWS credentials through the standard credential chain, e.g. `export AWS_PROFILE=<profile>` or an SSO session. No profile is hard-coded.
-
-## Apply order (per environment)
-
-1. `bootstrap/<env>`, once (copy `terraform.tfvars.example` to `terraform.tfvars` in every stack first)
-2. `envs/<env>/global`, then delegate `<env>.attendance.<base_domain>` with NS records at the base domain's DNS provider
-3. `envs/<env>/us-east-1`, then `envs/<env>/us-east-2`
-4. `envs/<env>/global-dns`
-
-State: one S3 bucket per environment (`attendance-service-<env>-tfstate-<company>`), key `<stack>/terraform.tfstate`, native S3 locking (`use_lockfile = true`).
 
 ## Configuration
 
@@ -83,6 +80,19 @@ State: one S3 bucket per environment (`attendance-service-<env>-tfstate-<company
 - **`terraform.tfvars` is gitignored.** Each stack commits a `terraform.tfvars.example` listing its settings.
 - **Terraform doesn't allow variables in a few places**, so these stay literal in code: `backend` blocks, `required_version` and provider version constraints, and `lifecycle` meta-arguments (`prevent_destroy`, `create_before_destroy`).
 - **AWS protocol constants stay fixed**, because changing them would break the resource. Examples: `sts:AssumeRole`, endpoint type `Gateway`, `0.0.0.0/0` default routes, the ELB log-delivery principal, and SSE-S3 on the ALB log bucket (the only encryption ALB access logs support).
+
+## Cost (dev, both regions, before traffic)
+
+| Item | Approx. per month |
+| --- | --- |
+| Regional NAT gateways (2 × 3 AZs) | $197 |
+| Fargate tasks (2 × 3 × 0.25 vCPU / 0.5 GB) | $54 |
+| ALBs (2) | $33 |
+| WAF (2 web ACLs, 3 rule groups each) | $16 |
+| Route 53 health checks (2), alarms, dashboard, hosted zone | $12 |
+| **Total** | **≈ $310** |
+
+Data processing (NAT, ALB LCUs, WAF requests), log ingestion and S3 storage come on top. NAT gateways are the main hourly cost.
 
 ## Checks
 
@@ -126,14 +136,3 @@ These skips apply to the **whole repo**, not to a single resource:
 | CKV_AWS_394 | The AZ list isn't pinned. The VPC takes the first 3 AZs sorted by name, and new AZs get later letters, so the selection doesn't change. |
 
 Because the skips are repo-wide, check this table when adding a new module so that a real finding isn't hidden.
-
-## Known deviations from a hardened design (deliberate)
-
-- **nginx runs as root on port 80** (the official image). Hardening path: an unprivileged image on 8080, a read-only root filesystem, and dropping all Linux capabilities.
-- **Images are pulled from Docker Hub through NAT.** This puts a public dependency in the scaling path, and anonymous pull rate limits apply. Moving to ECR (with ECR interface endpoints) is the hardening path.
-- **No interface endpoints** (ECR, CloudWatch Logs). Container logs reach CloudWatch through the NAT gateway.
-- **ALB uses AWS defaults for invalid-header dropping and desync mitigation** (`defensive`), and forwards plain HTTP to the tasks.
-- **No VPC flow logs.** Network traffic is not logged at VPC level.
-- **Security groups allow all outbound traffic.** Inbound rules (security-group sources wherever possible) are the control point. See [modules/templates/security-group](modules/templates/security-group/README.md).
-- **One AWS account hosts all environments.** Separate accounts per environment are the production target.
-- **State buckets use SSE-S3 (not KMS) and are not replicated across regions**, and have no access logging, event notifications or TLS-only bucket policy. See [bootstrap/dev/README.md](bootstrap/dev/README.md).

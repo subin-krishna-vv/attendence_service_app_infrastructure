@@ -20,7 +20,8 @@ S3 backend `attendance-service-dev-tfstate-abc`, key `global/terraform.tfstate`,
 | `env` | string | `"dev"` | Environment name, used in the domain name and the `env` tag. |
 | `owner` | string | `"devops-team"` | Owning team, used for the `owner` tag. |
 | `region` | string | `"us-east-1"` | Provider region for global resources. |
-| `base_domain` | string | — (required) | Base domain the service lives under, e.g. example.com. The dev zone is dev.attendance.<base_domain>. |
+| `base_domain` | string | `null` | Base domain the service lives under, e.g. example.com. The env zone is <env>.<service_subdomain>.<base_domain>. Required when enable_dns_zone is true. |
+| `enable_dns_zone` | bool | `true` | Create the env's public hosted zone. When false, the regional stacks must set enable_certificate = false and global-dns must set enable_dns_records = false. |
 | `service_subdomain` | string | `"attendance"` | Subdomain label of the service under base_domain. The env zone is <env>.<service_subdomain>.<base_domain>. |
 | `zone_comment` | string | `null` | Hosted zone comment; null uses the module default. |
 | `zone_force_destroy` | bool | `false` | Delete all records when the zone is destroyed. Keep false. |
@@ -36,6 +37,10 @@ terraform plan
 terraform apply
 terraform output name_servers
 ```
+
+## Toggle
+
+`enable_dns_zone` (default `true`). When it's `false`, no hosted zone is created, `base_domain` becomes optional and the outputs are `null`. The regional stacks then need `enable_certificate = false`, and `global-dns` needs `enable_dns_records = false`, because both depend on the zone.
 
 ## Manual step: delegate the subdomain
 

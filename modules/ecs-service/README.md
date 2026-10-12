@@ -103,7 +103,7 @@ module "ecs_service" {
 - **AZ spread.** ECS spreads Fargate tasks across the given subnets (one per AZ). Keep the count a multiple of the AZ count so each AZ carries an equal share.
 - **Two scaling policies.** ECS scales out when *either* policy asks for more tasks and scales in only when *both* allow it.
 - **ECS Exec is off** by default (`enable_execute_command`).
-- **Root filesystem is writable** because the official nginx image writes to `/var/cache/nginx` and `/var/run`, and it runs as root. Both are accepted deviations listed in the root README.
+- **Root filesystem is writable** because the official nginx image writes to `/var/cache/nginx` and `/var/run`, and it runs as root. Hardening path: an unprivileged nginx image on port 8080 with a read-only root filesystem and all Linux capabilities dropped.
 
 ## Cost (billed hourly)
 

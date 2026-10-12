@@ -19,7 +19,8 @@ S3 backend `attendance-service-dev-tfstate-abc`, key `global-dns/terraform.tfsta
 | `env` | string | `"dev"` | Environment name, used in the domain name and the `env` tag. |
 | `owner` | string | `"devops-team"` | Owning team, used for the `owner` tag. |
 | `region` | string | `"us-east-1"` | Provider region. Must be us-east-1: Route 53 health check metrics (and their alarms) only exist there. |
-| `base_domain` | string | — (required) | Base domain the service lives under, e.g. example.com. |
+| `base_domain` | string | `null` | Base domain the service lives under, e.g. example.com. Required when enable_dns_records is true. |
+| `enable_dns_records` | bool | `true` | Create the latency-routed records, Route 53 health checks and health check alarms. The dashboard is controlled separately by enable_dashboard. |
 | `service_subdomain` | string | `"attendance"` | Subdomain label of the service under base_domain. The env domain is <env>.<service_subdomain>.<base_domain>. |
 | `regions` | list(object) | see `variables.tf` | Regional stacks to route to and chart, with the name_prefix each used. |
 | `enable_health_checks` | bool | `true` | Create Route 53 health checks for each region's ALB. |
@@ -47,6 +48,13 @@ terraform output service_url
 | `service_url` | `https://dev.attendance.<base_domain>` |
 | `health_check_ids` | Route 53 health check IDs by region |
 | `dashboard_name` | Dashboard name, or `null` when disabled |
+
+## Toggles
+
+| Toggle | Default | Effect when `false` |
+| --- | --- | --- |
+| `enable_dns_records` | `true` | No latency records, Route 53 health checks or health check alarms. `base_domain` is optional, and `service_url` is `null`. |
+| `enable_dashboard` | `true` | No cross-region dashboard (independent of DNS) |
 
 ## Notes
 
