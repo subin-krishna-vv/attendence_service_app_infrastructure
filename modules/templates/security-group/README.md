@@ -27,7 +27,6 @@ The module uses the per-rule resources (`aws_vpc_security_group_*_rule`) rather 
 | `id` | Security group ID |
 | `arn` | Security group ARN |
 | `name` | Security group name |
-| `ingress_rules` | Created ingress rules keyed by rule name (ports, protocol, source) |
 
 ## Toggles
 

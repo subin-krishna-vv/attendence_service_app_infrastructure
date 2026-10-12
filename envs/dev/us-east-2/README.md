@@ -46,7 +46,6 @@ Saved plan files (`tfplan`) are gitignored.
 terraform fmt -check -recursive
 terraform init -backend=false && terraform validate
 tflint --config="$(git rev-parse --show-toplevel)/.tflint.hcl"
-terraform test   # plans the whole stack against mock providers; no AWS calls
 ```
 
 ## Outputs

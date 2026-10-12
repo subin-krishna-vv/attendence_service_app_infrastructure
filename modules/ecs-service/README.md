@@ -97,7 +97,7 @@ module "ecs_service" {
   - To upgrade, look up the new digest (`docker buildx imagetools inspect nginx:<version>`) and set `container_image`.
 - **Least-privilege execution role.** Instead of AWS's `AmazonECSTaskExecutionRolePolicy`, which also grants ECR pulls and log writes everywhere, the custom policy allows only writing to this service's log group. Docker Hub pulls need no IAM.
   - If images move to ECR, add `ecr:GetAuthorizationToken` and the ECR pull actions.
-- **Separate roles.** The execution role is used by the ECS agent; the task role is used by the containers. Checkov CKV_AWS_249 falsely reports them as equal, because both come from the same template, so that check is skipped. The `separate_execution_and_task_roles` test proves they differ.
+- **Separate roles.** The execution role is used by the ECS agent; the task role is used by the containers. Checkov CKV_AWS_249 falsely reports them as equal, because both come from the same template, so that check is skipped.
 - **`desired_count` is ignored after creation** (`ignore_changes`). This stops Terraform from fighting autoscaling. Change capacity with `min_capacity` and `max_capacity`.
 - **Zero-downtime rolling deployments.** With 100% minimum healthy and 200% maximum, new tasks must pass the ALB health check before old ones stop. The circuit breaker rolls back a deployment whose tasks keep failing.
 - **AZ spread.** ECS spreads Fargate tasks across the given subnets (one per AZ). Keep the count a multiple of the AZ count so each AZ carries an equal share.
