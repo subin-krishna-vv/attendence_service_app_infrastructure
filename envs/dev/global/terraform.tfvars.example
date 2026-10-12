@@ -1,0 +1,8 @@
+project            = "attendance-service"
+env                = "dev"
+owner              = "devops-team"
+region             = "us-east-1"
+base_domain        = "example.com"
+enable_dns_zone    = false
+service_subdomain  = "attendance"
+zone_force_destroy = false

@@ -42,3 +42,20 @@ terraform.rc
 # Optional: ignore plan files saved before destroying Terraform configuration
 # Uncomment the line below if you want to ignore planout files.
 # planout
+
+mcp.json
+CLAUDE.MD
+
+# Local Claude Code / MCP config
+.mcp.json
+CLAUDE.md
+
+# Saved plan files (can contain sensitive values)
+*.tfplan
+tfplan
+
+# macOS
+.DS_Store
+
+# Lock files belong only to root stacks (bootstrap/, envs/)
+modules/**/.terraform.lock.hcl

@@ -1,0 +1,17 @@
+project                    = "attendance-service"
+env                        = "dev"
+owner                      = "devops-team"
+region                     = "us-east-1"
+base_domain                = "example.com"
+service_subdomain          = "attendance"
+enable_dns_records         = false
+enable_health_checks       = false
+enable_health_check_alarms = false
+enable_sns                 = false
+alarm_topic_name           = "attendance-service-dev-use1-alarms"
+enable_dashboard           = true
+dashboard_name             = "attendance-service-dev"
+regions = [
+  { region = "us-east-1", name_prefix = "attendance-service-dev-use1" },
+  { region = "us-east-2", name_prefix = "attendance-service-dev-use2" },
+]

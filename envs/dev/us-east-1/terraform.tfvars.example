@@ -1,0 +1,43 @@
+base_domain  = "example.com"
+alarm_emails = ["alerts@example.com"]
+
+project           = "attendance-service"
+env               = "dev"
+owner             = "devops-team"
+company           = "abc"
+region            = "us-east-1"
+region_short      = "use1"
+service_subdomain = "attendance"
+
+vpc_cidr                 = "10.10.0.0/16"
+az_count                 = 3
+enable_nat_gateway       = true
+enable_s3_endpoint       = true
+enable_dynamodb_endpoint = true
+
+enable_certificate             = false
+enable_wildcard_certificate    = false
+enable_https                   = false
+enable_alb_access_logs         = false
+alb_access_log_retention_days  = 30
+enable_alb_deletion_protection = false
+
+enable_waf              = true
+waf_managed_rule_action = "count"
+waf_log_retention_days  = 30
+
+container_image              = "nginx:1.30.5@sha256:9bf97bd7714f5e24c1ccd545ecb9eb5435cb6d109c97cebb15e7e455e0239edb"
+task_cpu                     = 256
+task_memory                  = 512
+desired_count                = 3
+enable_autoscaling           = true
+min_capacity                 = 3
+max_capacity                 = 6
+requests_per_target          = 1000
+cpu_target_percent           = 60
+enable_circuit_breaker       = true
+enable_container_insights    = true
+container_log_retention_days = 30
+
+enable_alarms = true
+enable_sns    = false
