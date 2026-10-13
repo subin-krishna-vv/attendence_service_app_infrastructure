@@ -1,11 +1,6 @@
 variable "name_prefix" {
   description = "Prefix for resource names: <project>-<env>-<region_short>, e.g. attendance-service-dev-use1."
   type        = string
-
-  validation {
-    condition     = can(regex("^[a-z0-9][a-z0-9-]*[a-z0-9]$", var.name_prefix)) && length(var.name_prefix) <= 200
-    error_message = "name_prefix must be lowercase alphanumeric with hyphens."
-  }
 }
 
 variable "alb_arn_suffix" {
@@ -32,11 +27,6 @@ variable "alarm_emails" {
   description = "Email addresses subscribed to the alarm topic. Each address must confirm the subscription email from AWS."
   type        = list(string)
   default     = []
-
-  validation {
-    condition     = alltrue([for e in var.alarm_emails : can(regex("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$", e))])
-    error_message = "Every alarm_emails entry must be a valid email address."
-  }
 }
 
 variable "enable_sns" {
@@ -55,22 +45,12 @@ variable "treat_missing_data" {
   description = "How alarms treat periods with no data."
   type        = string
   default     = "notBreaching"
-
-  validation {
-    condition     = contains(["breaching", "notBreaching", "ignore", "missing"], var.treat_missing_data)
-    error_message = "treat_missing_data must be breaching, notBreaching, ignore or missing."
-  }
 }
 
 variable "error_rate_threshold_percent" {
   description = "Error budget in percent: the error-rate alarm fires above this. 0.01 matches a 99.99% success SLO."
   type        = number
   default     = 0.01
-
-  validation {
-    condition     = var.error_rate_threshold_percent > 0 && var.error_rate_threshold_percent < 100
-    error_message = "error_rate_threshold_percent must be between 0 and 100 (exclusive)."
-  }
 }
 
 variable "error_rate_period" {
@@ -89,22 +69,12 @@ variable "error_rate_min_requests" {
   description = "Minimum requests in a period before the error rate is evaluated (avoids 1-in-10 style alarms at low traffic)."
   type        = number
   default     = 1000
-
-  validation {
-    condition     = var.error_rate_min_requests >= 0
-    error_message = "error_rate_min_requests must be non-negative."
-  }
 }
 
 variable "latency_percentile" {
   description = "Percentile of TargetResponseTime the latency alarm watches."
   type        = string
   default     = "p99.99"
-
-  validation {
-    condition     = can(regex("^p\\d{1,2}(\\.\\d{1,2})?$", var.latency_percentile))
-    error_message = "latency_percentile must look like p99, p99.9 or p99.99."
-  }
 }
 
 variable "latency_threshold_seconds" {

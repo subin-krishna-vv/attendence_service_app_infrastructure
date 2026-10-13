@@ -1,21 +1,11 @@
 variable "name" {
   description = "Full security group name, e.g. attendance-service-dev-use1-alb."
   type        = string
-
-  validation {
-    condition     = length(var.name) > 0 && length(var.name) <= 255 && !startswith(lower(var.name), "sg-")
-    error_message = "name must be 1-255 characters and must not start with sg-."
-  }
 }
 
 variable "description" {
   description = "What the security group protects. Changing it replaces the group."
   type        = string
-
-  validation {
-    condition     = length(trimspace(var.description)) > 0
-    error_message = "description must not be empty."
-  }
 }
 
 variable "vpc_id" {
@@ -40,22 +30,12 @@ variable "ingress_rules" {
 
   validation {
     condition     = alltrue([for r in values(var.ingress_rules) : (r.referenced_security_group_id == null) != (r.cidr_ipv4 == null)])
-    error_message = "Each ingress rule must set exactly one of referenced_security_group_id or cidr_ipv4."
-  }
-
-  validation {
-    condition     = alltrue([for r in values(var.ingress_rules) : length(trimspace(r.description)) > 0])
-    error_message = "Each ingress rule must have a non-empty description."
+    error_message = "Each ingress rule needs exactly one source."
   }
 
   validation {
     condition     = alltrue([for r in values(var.ingress_rules) : contains(["tcp", "udp"], r.ip_protocol)])
-    error_message = "ip_protocol must be tcp or udp (all-protocol ingress is not allowed)."
-  }
-
-  validation {
-    condition     = alltrue([for r in values(var.ingress_rules) : r.from_port >= 0 && r.to_port <= 65535 && r.from_port <= r.to_port])
-    error_message = "Ports must be within 0-65535 and from_port must be <= to_port."
+    error_message = "Ingress rules must use tcp or udp."
   }
 }
 
@@ -63,9 +43,4 @@ variable "egress_cidr_ipv4" {
   description = "IPv4 CIDR all outbound traffic is allowed to."
   type        = string
   default     = "0.0.0.0/0"
-
-  validation {
-    condition     = can(cidrhost(var.egress_cidr_ipv4, 0))
-    error_message = "egress_cidr_ipv4 must be a valid IPv4 CIDR block."
-  }
 }

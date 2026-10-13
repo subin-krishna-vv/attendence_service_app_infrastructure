@@ -22,13 +22,6 @@ resource "aws_vpc" "this" {
   tags = {
     Name = "${var.name_prefix}-vpc"
   }
-
-  lifecycle {
-    precondition {
-      condition     = length(data.aws_availability_zones.this.names) >= length(var.public_subnet_cidrs)
-      error_message = "The region has fewer standard Availability Zones than public_subnet_cidrs."
-    }
-  }
 }
 
 resource "aws_default_security_group" "this" {

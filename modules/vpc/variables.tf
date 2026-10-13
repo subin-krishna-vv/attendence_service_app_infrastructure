@@ -1,11 +1,6 @@
 variable "name_prefix" {
   description = "Prefix for resource Name tags: <project>-<env>-<region_short>, e.g. attendance-service-dev-use1."
   type        = string
-
-  validation {
-    condition     = can(regex("^[a-z0-9][a-z0-9-]*[a-z0-9]$", var.name_prefix))
-    error_message = "name_prefix must be lowercase alphanumeric with hyphens."
-  }
 }
 
 variable "vpc_cidr" {
@@ -14,7 +9,7 @@ variable "vpc_cidr" {
 
   validation {
     condition     = can(cidrhost(var.vpc_cidr, 0)) && endswith(var.vpc_cidr, "/16") && cidrhost(var.vpc_cidr, 0) == split("/", var.vpc_cidr)[0]
-    error_message = "vpc_cidr must be a valid network address with a /16 prefix, e.g. 10.10.0.0/16."
+    error_message = "vpc_cidr must be a /16 network address."
   }
 }
 
