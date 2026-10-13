@@ -250,12 +250,6 @@ variable "log_retention_days" {
   }
 }
 
-variable "log_group_kms_key_arn" {
-  description = "KMS key ARN to encrypt the container log group. null uses CloudWatch Logs default encryption."
-  type        = string
-  default     = null
-}
-
 variable "enable_execute_command" {
   description = "Allow ECS Exec (interactive shell into running tasks). Keep false unless debugging."
   type        = bool

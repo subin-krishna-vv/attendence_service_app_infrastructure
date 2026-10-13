@@ -78,10 +78,16 @@ variable "vpc_cidr" {
   default     = "10.10.0.0/16"
 }
 
-variable "az_count" {
-  description = "Number of Availability Zones (one public and one private subnet each)."
-  type        = number
-  default     = 3
+variable "public_subnet_cidrs" {
+  description = "Public subnet CIDRs, one per AZ in AZ name order."
+  type        = list(string)
+  default     = ["10.10.0.0/20", "10.10.16.0/20", "10.10.32.0/20"]
+}
+
+variable "private_subnet_cidrs" {
+  description = "Private subnet CIDRs, one per AZ in AZ name order."
+  type        = list(string)
+  default     = ["10.10.128.0/20", "10.10.144.0/20", "10.10.160.0/20"]
 }
 
 variable "enable_nat_gateway" {

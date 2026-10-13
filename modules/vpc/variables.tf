@@ -36,58 +36,14 @@ variable "enable_dynamodb_endpoint" {
   default     = true
 }
 
-variable "az_count" {
-  description = "Number of Availability Zones (first N standard AZs by name); one public and one private subnet per AZ."
-  type        = number
-  default     = 3
-
-  validation {
-    condition     = var.az_count >= 2 && var.az_count <= 6 && floor(var.az_count) == var.az_count
-    error_message = "az_count must be a whole number between 2 and 6."
-  }
+variable "public_subnet_cidrs" {
+  description = "Public subnet CIDRs, one per AZ in AZ name order (first goes in AZ a)."
+  type        = list(string)
 }
 
-variable "subnet_newbits" {
-  description = "Bits added to the VPC prefix for each subnet (4 on a /16 gives /20 subnets)."
-  type        = number
-  default     = 4
-
-  validation {
-    condition     = var.subnet_newbits >= 1 && var.subnet_newbits <= 12 && floor(var.subnet_newbits) == var.subnet_newbits
-    error_message = "subnet_newbits must be a whole number between 1 and 12."
-  }
-}
-
-variable "public_subnet_offset" {
-  description = "cidrsubnet index of the first public subnet; public subnets take az_count consecutive indexes from here."
-  type        = number
-  default     = 0
-
-  validation {
-    condition     = var.public_subnet_offset >= 0 && floor(var.public_subnet_offset) == var.public_subnet_offset
-    error_message = "public_subnet_offset must be a non-negative whole number."
-  }
-}
-
-variable "private_subnet_offset" {
-  description = "cidrsubnet index of the first private subnet; private subnets take az_count consecutive indexes from here."
-  type        = number
-  default     = 8
-
-  validation {
-    condition     = var.private_subnet_offset >= 0 && floor(var.private_subnet_offset) == var.private_subnet_offset
-    error_message = "private_subnet_offset must be a non-negative whole number."
-  }
-
-  validation {
-    condition     = var.private_subnet_offset >= var.public_subnet_offset + var.az_count || var.public_subnet_offset >= var.private_subnet_offset + var.az_count
-    error_message = "Public and private subnet index ranges must not overlap."
-  }
-
-  validation {
-    condition     = max(var.public_subnet_offset, var.private_subnet_offset) + var.az_count <= pow(2, var.subnet_newbits)
-    error_message = "Subnet indexes exceed the VPC CIDR: offset + az_count must be <= 2^subnet_newbits."
-  }
+variable "private_subnet_cidrs" {
+  description = "Private subnet CIDRs, one per AZ in AZ name order (first goes in AZ a)."
+  type        = list(string)
 }
 
 variable "enable_dns_support" {

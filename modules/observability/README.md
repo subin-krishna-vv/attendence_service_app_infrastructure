@@ -30,7 +30,6 @@ Every alarm sends both **ALARM** and **OK** notifications to the topic. Missing 
 | `ecs_service_name` | string | — (required) | Name of the ECS service (ServiceName metric dimension). |
 | `alarm_emails` | list(string) | `[]` | Email addresses subscribed to the alarm topic. Each address must confirm the subscription email from AWS. |
 | `enable_sns` | bool | `true` | Create the SNS alarm topic and its email subscriptions. When false, alarms still exist in CloudWatch but notify no one. |
-| `sns_kms_master_key_id` | string | `null` | Customer-managed KMS key for the alarm topic. null leaves the topic unencrypted (CloudWatch cannot publish to a topic encrypted with the AWS-managed aws/sns key). |
 | `enable_alarms` | bool | `true` | Create the SLO and supporting CloudWatch alarms. |
 | `treat_missing_data` | string | `"notBreaching"` | How alarms treat periods with no data. |
 | `error_rate_threshold_percent` | number | `0.01` | Error budget in percent: the error-rate alarm fires above this. 0.01 matches a 99.99% success SLO. |
@@ -90,7 +89,7 @@ The second block is the regional stack's `terraform.tfvars`. Add more addresses 
 - **The latency alarm is a direct percentile alarm** (`extended_statistic = "p99.99"`) on the whole ALB. At low traffic p99.99 is effectively the maximum, so one slow request in a minute counts. Requiring 3 of 3 minutes filters out single spikes.
 - **These are simple threshold alarms** (design decision), not multi-window burn-rate alarms.
 - **The running-tasks alarm needs Container Insights** (on by default in `ecs-service`). If Insights is off the metric is missing, and the alarm stays OK.
-- **The SNS topic is unencrypted by default.** CloudWatch can't publish to a topic encrypted with the AWS-managed `aws/sns` key ([AWS re:Post](https://repost.aws/knowledge-center/cloudwatch-configure-alarm-sns)); it needs a customer-managed key whose key policy allows `cloudwatch.amazonaws.com`. Set `sns_kms_master_key_id` to such a key to encrypt. Alarm notifications contain no application data.
+- **The SNS topic is unencrypted.** CloudWatch can't publish to a topic encrypted with the AWS-managed `aws/sns` key ([AWS re:Post](https://repost.aws/knowledge-center/cloudwatch-configure-alarm-sns)); it needs a customer-managed key whose key policy allows `cloudwatch.amazonaws.com`. Alarm notifications contain no application data.
 - **Thresholds are separate variables.** `error_rate_threshold_percent` is set directly (0.01) rather than computed as `100 - 99.99`, because Terraform's arithmetic gives 0.00999… for that subtraction.
 
 ## Cost

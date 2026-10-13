@@ -8,19 +8,14 @@ output "vpc_cidr_block" {
   value       = aws_vpc.this.cidr_block
 }
 
-output "azs" {
-  description = "The 3 Availability Zone names used, in subnet order."
-  value       = local.azs
-}
-
 output "public_subnet_ids" {
-  description = "Public subnet IDs (ALB), ordered as azs."
-  value       = [for az in local.azs : aws_subnet.public[az].id]
+  description = "Public subnet IDs (ALB), in AZ name order."
+  value       = [for s in aws_subnet.public : s.id]
 }
 
 output "private_subnet_ids" {
-  description = "Private subnet IDs (ECS tasks, interface endpoints, DAX), ordered as azs."
-  value       = [for az in local.azs : aws_subnet.private[az].id]
+  description = "Private subnet IDs (ECS tasks, DAX), in AZ name order."
+  value       = [for s in aws_subnet.private : s.id]
 }
 
 output "public_route_table_id" {

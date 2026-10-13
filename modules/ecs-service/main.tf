@@ -26,7 +26,6 @@ resource "aws_ecs_cluster_capacity_providers" "this" {
 resource "aws_cloudwatch_log_group" "this" {
   name              = "/ecs/${local.service_name}"
   retention_in_days = var.log_retention_days
-  kms_key_id        = var.log_group_kms_key_arn
 }
 
 module "task_security_group" {

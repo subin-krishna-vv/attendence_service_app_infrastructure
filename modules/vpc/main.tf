@@ -8,10 +8,10 @@ data "aws_availability_zones" "this" {
 }
 
 locals {
-  azs = slice(sort(data.aws_availability_zones.this.names), 0, min(var.az_count, length(data.aws_availability_zones.this.names)))
+  azs = sort(data.aws_availability_zones.this.names)
 
-  public_subnet_cidrs  = { for i, az in local.azs : az => cidrsubnet(var.vpc_cidr, var.subnet_newbits, var.public_subnet_offset + i) }
-  private_subnet_cidrs = { for i, az in local.azs : az => cidrsubnet(var.vpc_cidr, var.subnet_newbits, var.private_subnet_offset + i) }
+  public_subnets  = { for i, cidr in var.public_subnet_cidrs : local.azs[i] => cidr }
+  private_subnets = { for i, cidr in var.private_subnet_cidrs : local.azs[i] => cidr }
 }
 
 resource "aws_vpc" "this" {
@@ -25,8 +25,8 @@ resource "aws_vpc" "this" {
 
   lifecycle {
     precondition {
-      condition     = length(data.aws_availability_zones.this.names) >= var.az_count
-      error_message = "The region has fewer standard Availability Zones than az_count."
+      condition     = length(data.aws_availability_zones.this.names) >= length(var.public_subnet_cidrs)
+      error_message = "The region has fewer standard Availability Zones than public_subnet_cidrs."
     }
   }
 }
@@ -50,7 +50,7 @@ resource "aws_internet_gateway" "this" {
 }
 
 resource "aws_subnet" "public" {
-  for_each = local.public_subnet_cidrs
+  for_each = local.public_subnets
 
   vpc_id                  = aws_vpc.this.id
   availability_zone       = each.key
@@ -63,7 +63,7 @@ resource "aws_subnet" "public" {
 }
 
 resource "aws_subnet" "private" {
-  for_each = local.private_subnet_cidrs
+  for_each = local.private_subnets
 
   vpc_id                  = aws_vpc.this.id
   availability_zone       = each.key
