@@ -1,11 +1,6 @@
 variable "dashboard_name" {
   description = "Name of the CloudWatch dashboard, e.g. attendance-service-dev."
   type        = string
-
-  validation {
-    condition     = can(regex("^[A-Za-z0-9_-]{1,255}$", var.dashboard_name))
-    error_message = "dashboard_name may contain only letters, digits, - and _ (max 255)."
-  }
 }
 
 variable "regions" {
@@ -14,16 +9,6 @@ variable "regions" {
     region      = string
     name_prefix = string
   }))
-
-  validation {
-    condition     = length(var.regions) >= 1 && length(var.regions) <= 4
-    error_message = "regions must contain between 1 and 4 entries."
-  }
-
-  validation {
-    condition     = length(distinct([for r in var.regions : r.region])) == length(var.regions)
-    error_message = "Each region may appear only once."
-  }
 }
 
 variable "alb_name_suffix" {
@@ -94,11 +79,6 @@ variable "period" {
   description = "Default metric period in seconds for all widgets."
   type        = number
   default     = 60
-
-  validation {
-    condition     = contains([60, 300, 900, 3600], var.period)
-    error_message = "period must be 60, 300, 900 or 3600."
-  }
 }
 
 variable "widget_height" {

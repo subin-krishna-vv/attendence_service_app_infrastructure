@@ -11,7 +11,7 @@ variable "env" {
 
   validation {
     condition     = contains(["dev", "staging", "prod"], var.env)
-    error_message = "env must be one of: dev, staging, prod."
+    error_message = "env must be dev, staging or prod."
   }
 }
 
@@ -31,11 +31,6 @@ variable "base_domain" {
   description = "Base domain the service lives under, e.g. example.com. Required when enable_dns_records is true."
   type        = string
   default     = null
-
-  validation {
-    condition     = var.base_domain == null || can(regex("^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z]{2,63}$", var.base_domain))
-    error_message = "base_domain must be a lowercase domain name without a trailing dot, e.g. example.com."
-  }
 
   validation {
     condition     = !var.enable_dns_records || var.base_domain != null
