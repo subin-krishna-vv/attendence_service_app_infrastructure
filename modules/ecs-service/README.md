@@ -54,7 +54,6 @@ Values shown are the variable defaults; each can be overridden (see Inputs).
 | `enable_container_insights` | bool | `true` | Turn on CloudWatch Container Insights for the cluster. |
 | `container_insights_mode` | string | `"enabled"` | Container Insights level when enabled: enabled (standard) or enhanced (more metrics, extra cost). |
 | `log_retention_days` | number | `30` | Days to keep container logs in CloudWatch Logs. |
-| `log_group_kms_key_arn` | string | `null` | KMS key ARN to encrypt the container log group. null uses CloudWatch Logs default encryption. |
 | `enable_execute_command` | bool | `false` | Allow ECS Exec (interactive shell into running tasks). Keep false unless debugging. |
 
 ## Outputs

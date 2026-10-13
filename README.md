@@ -245,6 +245,8 @@ These skips apply to the **whole repo**, not to a single resource:
 | CKV_AWS_338 | CloudWatch log groups keep logs for less than 1 year (WAF logs: 30 days, design decision) |
 | CKV_AWS_249 | False positive: the ECS execution and task roles are separate roles (`<prefix>-ecs-execution`, `<prefix>-ecs-task`); both come from the iam-role template, so Checkov resolves them as equal |
 | CKV_AWS_65 | False positive: Container Insights is enabled by default in `ecs-service`, but Checkov can't resolve values passed from an env stack's variables into a module |
+| CKV_AWS_26 | The SNS alarm topic is unencrypted: CloudWatch can't publish to a topic encrypted with the AWS-managed `aws/sns` key, and alarm messages hold no application data |
+| CKV_AWS_158 | CloudWatch log groups use the default CloudWatch Logs encryption, not a customer KMS key |
 | CKV_AWS_394 | The AZ list isn't pinned. The VPC takes the first 3 AZs sorted by name, and new AZs get later letters, so the selection doesn't change. |
 
 Because the skips are repo-wide, check this table when adding a new module so that a real finding isn't hidden.

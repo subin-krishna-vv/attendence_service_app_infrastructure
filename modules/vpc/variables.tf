@@ -31,38 +31,14 @@ variable "enable_dynamodb_endpoint" {
   default     = true
 }
 
-variable "az_count" {
-  description = "Number of Availability Zones (first N standard AZs by name); one public and one private subnet per AZ."
-  type        = number
-  default     = 3
+variable "public_subnet_cidrs" {
+  description = "Public subnet CIDRs, one per AZ in AZ name order (first goes in AZ a)."
+  type        = list(string)
 }
 
-variable "subnet_newbits" {
-  description = "Bits added to the VPC prefix for each subnet (4 on a /16 gives /20 subnets)."
-  type        = number
-  default     = 4
-}
-
-variable "public_subnet_offset" {
-  description = "cidrsubnet index of the first public subnet; public subnets take az_count consecutive indexes from here."
-  type        = number
-  default     = 0
-}
-
-variable "private_subnet_offset" {
-  description = "cidrsubnet index of the first private subnet; private subnets take az_count consecutive indexes from here."
-  type        = number
-  default     = 8
-
-  validation {
-    condition     = var.private_subnet_offset >= var.public_subnet_offset + var.az_count || var.public_subnet_offset >= var.private_subnet_offset + var.az_count
-    error_message = "Public and private subnet ranges overlap."
-  }
-
-  validation {
-    condition     = max(var.public_subnet_offset, var.private_subnet_offset) + var.az_count <= pow(2, var.subnet_newbits)
-    error_message = "Subnets don't fit inside the VPC CIDR."
-  }
+variable "private_subnet_cidrs" {
+  description = "Private subnet CIDRs, one per AZ in AZ name order (first goes in AZ a)."
+  type        = list(string)
 }
 
 variable "enable_dns_support" {

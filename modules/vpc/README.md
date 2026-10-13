@@ -4,7 +4,7 @@ Creates one region's network: a `/16` VPC with **3 public and 3 private `/20` su
 
 ## Resources
 
-Counts and CIDRs shown are for the defaults (`az_count = 3`, `subnet_newbits = 4`, offsets 0 and 8); each can be overridden (see Inputs).
+Counts shown are for 3 CIDRs in each subnet list.
 
 | Resource | Count | Purpose |
 | --- | --- | --- |
@@ -22,16 +22,16 @@ Counts and CIDRs shown are for the defaults (`az_count = 3`, `subnet_newbits = 4
 
 ## Subnet layout
 
-Subnets are computed from `vpc_cidr` with `cidrsubnet(vpc_cidr, 4, n)`, so the offsets are the same in every `/16`:
+Each regional stack sets the subnet CIDRs as fixed lists. Dev us-east-1 (`10.10.0.0/16`) uses the layout below; us-east-2 uses the same layout in `10.11.0.0/16`:
 
 | Tier | AZ a | AZ b | AZ c | Free for growth |
 | --- | --- | --- | --- | --- |
-| Public (`n` = 0–2) | `10.10.0.0/20` | `10.10.16.0/20` | `10.10.32.0/20` | `10.10.48.0` – `10.10.127.255` |
-| Private (`n` = 8–10) | `10.10.128.0/20` | `10.10.144.0/20` | `10.10.160.0/20` | `10.10.176.0` – `10.10.255.255` |
+| Public | `10.10.0.0/20` | `10.10.16.0/20` | `10.10.32.0/20` | `10.10.48.0` – `10.10.127.255` |
+| Private | `10.10.128.0/20` | `10.10.144.0/20` | `10.10.160.0/20` | `10.10.176.0` – `10.10.255.255` |
 
 Each `/20` has 4,091 usable IPs. Every Fargate task uses one IP.
 
-**AZ selection:** the module uses the first 3 standard AZs sorted by name. It queries every state and filters on `opt-in-status = opt-in-not-required` to leave out Local and Wavelength Zones. Not filtering on state means an AZ marked *impaired* during an outage does not shift the list, which would otherwise make Terraform plan to replace subnets.
+**AZ selection:** the module takes the standard AZs sorted by name and puts the *n*-th CIDR of each list in the *n*-th AZ, so 3 CIDRs use AZs a, b and c. It queries every state and filters on `opt-in-status = opt-in-not-required` to leave out Local and Wavelength Zones. Not filtering on state means an AZ marked *impaired* during an outage does not shift the list, which would otherwise make Terraform plan to replace subnets.
 
 ## Inputs
 
@@ -42,10 +42,8 @@ Each `/20` has 4,091 usable IPs. Every Fargate task uses one IP.
 | `enable_nat_gateway` | bool | `true` | Create the regional NAT gateway and the private subnets' default route through it. |
 | `enable_s3_endpoint` | bool | `true` | Create the S3 gateway endpoint on the private route table. |
 | `enable_dynamodb_endpoint` | bool | `true` | Create the DynamoDB gateway endpoint on the private route table. |
-| `az_count` | number | `3` | Number of Availability Zones (first N standard AZs by name); one public and one private subnet per AZ. |
-| `subnet_newbits` | number | `4` | Bits added to the VPC prefix for each subnet (4 on a /16 gives /20 subnets). |
-| `public_subnet_offset` | number | `0` | cidrsubnet index of the first public subnet; public subnets take az_count consecutive indexes from here. |
-| `private_subnet_offset` | number | `8` | cidrsubnet index of the first private subnet; private subnets take az_count consecutive indexes from here. |
+| `public_subnet_cidrs` | list(string) | — (required) | Public subnet CIDRs, one per AZ in AZ name order (first goes in AZ a). |
+| `private_subnet_cidrs` | list(string) | — (required) | Private subnet CIDRs, one per AZ in AZ name order (first goes in AZ a). |
 | `enable_dns_support` | bool | `true` | Enable the Amazon-provided DNS resolver in the VPC (needed for gateway endpoints and private DNS). |
 | `enable_dns_hostnames` | bool | `true` | Give instances and ENIs public/private DNS hostnames. |
 | `map_public_ip_on_launch` | bool | `false` | Auto-assign public IPv4 addresses to ENIs launched in the subnets. Keep false: the ALB and NAT do not need it. |
@@ -56,9 +54,8 @@ Each `/20` has 4,091 usable IPs. Every Fargate task uses one IP.
 | --- | --- |
 | `vpc_id` | VPC ID |
 | `vpc_cidr_block` | VPC CIDR |
-| `azs` | The 3 AZ names, in subnet order |
-| `public_subnet_ids` | Public subnet IDs (list, ordered as `azs`) |
-| `private_subnet_ids` | Private subnet IDs (list, ordered as `azs`) |
+| `public_subnet_ids` | Public subnet IDs (list, in AZ name order) |
+| `private_subnet_ids` | Private subnet IDs (list, in AZ name order) |
 | `public_route_table_id` | Public route table ID |
 | `private_route_table_id` | Private route table ID |
 | `nat_gateway_id` | Regional NAT gateway ID, or `null` when disabled |
@@ -81,6 +78,9 @@ module "vpc" {
   source      = "../../../modules/vpc"
   name_prefix = "attendance-service-dev-use1"
   vpc_cidr    = "10.10.0.0/16"
+
+  public_subnet_cidrs  = ["10.10.0.0/20", "10.10.16.0/20", "10.10.32.0/20"]
+  private_subnet_cidrs = ["10.10.128.0/20", "10.10.144.0/20", "10.10.160.0/20"]
 }
 ```
 

@@ -20,8 +20,7 @@ locals {
 resource "aws_sns_topic" "alarms" {
   count = var.enable_sns ? 1 : 0
 
-  name              = "${var.name_prefix}-alarms"
-  kms_master_key_id = var.sns_kms_master_key_id
+  name = "${var.name_prefix}-alarms"
 }
 
 resource "aws_sns_topic_subscription" "email" {

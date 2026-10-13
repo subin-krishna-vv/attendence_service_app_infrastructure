@@ -35,12 +35,6 @@ variable "enable_sns" {
   default     = true
 }
 
-variable "sns_kms_master_key_id" {
-  description = "Customer-managed KMS key for the alarm topic. null leaves the topic unencrypted (CloudWatch cannot publish to a topic encrypted with the AWS-managed aws/sns key)."
-  type        = string
-  default     = null
-}
-
 variable "enable_alarms" {
   description = "Create the SLO and supporting CloudWatch alarms."
   type        = bool
