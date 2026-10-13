@@ -1,5 +1,3 @@
-data "aws_region" "current" {}
-
 data "aws_route53_zone" "this" {
   name         = var.zone_name
   private_zone = false
@@ -78,11 +76,4 @@ resource "aws_cloudwatch_metric_alarm" "health" {
   treat_missing_data  = "breaching"
   alarm_actions       = local.alarm_actions
   ok_actions          = local.alarm_actions
-
-  lifecycle {
-    precondition {
-      condition     = data.aws_region.current.region == "us-east-1"
-      error_message = "Route 53 health check metrics only exist in us-east-1; run this module with a us-east-1 provider or disable enable_health_check_alarms."
-    }
-  }
 }

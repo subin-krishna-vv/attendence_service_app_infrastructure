@@ -1,11 +1,6 @@
 variable "zone_name" {
   description = "Name of the existing public hosted zone, e.g. dev.attendance.example.com."
   type        = string
-
-  validation {
-    condition     = can(regex("^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z]{2,63}$", var.zone_name))
-    error_message = "zone_name must be a lowercase fully qualified domain name without a trailing dot."
-  }
 }
 
 variable "record_name" {
@@ -14,7 +9,7 @@ variable "record_name" {
 
   validation {
     condition     = var.record_name == var.zone_name || endswith(var.record_name, ".${var.zone_name}")
-    error_message = "record_name must be zone_name or a subdomain of it."
+    error_message = "record_name must be zone_name or inside it."
   }
 }
 
@@ -24,16 +19,6 @@ variable "regions" {
     region      = string
     name_prefix = string
   }))
-
-  validation {
-    condition     = length(var.regions) >= 1
-    error_message = "regions must contain at least one region."
-  }
-
-  validation {
-    condition     = length(distinct([for r in var.regions : r.region])) == length(var.regions)
-    error_message = "Each region may appear only once."
-  }
 }
 
 variable "alb_name_suffix" {
@@ -58,11 +43,6 @@ variable "health_check_type" {
   description = "Protocol of the health checks."
   type        = string
   default     = "HTTPS"
-
-  validation {
-    condition     = contains(["HTTP", "HTTPS"], var.health_check_type)
-    error_message = "health_check_type must be HTTP or HTTPS."
-  }
 }
 
 variable "health_check_port" {
@@ -75,33 +55,18 @@ variable "health_check_path" {
   description = "Path the health checks request."
   type        = string
   default     = "/"
-
-  validation {
-    condition     = startswith(var.health_check_path, "/")
-    error_message = "health_check_path must start with /."
-  }
 }
 
 variable "health_check_request_interval" {
   description = "Seconds between checks from each checker: 10 (fast, extra cost) or 30."
   type        = number
   default     = 10
-
-  validation {
-    condition     = contains([10, 30], var.health_check_request_interval)
-    error_message = "health_check_request_interval must be 10 or 30."
-  }
 }
 
 variable "health_check_failure_threshold" {
   description = "Consecutive failures before an endpoint is unhealthy."
   type        = number
   default     = 3
-
-  validation {
-    condition     = var.health_check_failure_threshold >= 1 && var.health_check_failure_threshold <= 10
-    error_message = "health_check_failure_threshold must be between 1 and 10."
-  }
 }
 
 variable "health_check_measure_latency" {
@@ -114,11 +79,6 @@ variable "health_check_regions" {
   description = "Route 53 checker regions (at least 3). null uses all checker regions."
   type        = list(string)
   default     = null
-
-  validation {
-    condition     = var.health_check_regions == null || length(coalesce(var.health_check_regions, [])) >= 3
-    error_message = "health_check_regions must be null or list at least 3 checker regions."
-  }
 }
 
 variable "enable_health_check_alarms" {

@@ -74,7 +74,7 @@ module "route53_latency" {
 - **How failover works.** Each latency record is only served while its health check passes, *and* while the ALB has healthy targets (`evaluate_target_health`). If us-east-1 fails, Route 53 answers every client with us-east-2.
   - Detection takes about 30 seconds (3 failures × 10 s). Clients then pick up the change when resolvers refresh. Alias records to an ALB use a 60-second TTL.
 - **The health check hits the ALB's DNS name directly** (design decision). It tests the region itself, independent of our own DNS. Route 53 health checks don't validate the certificate's hostname, so the ALB's `dev.attendance…` certificate is fine. The check passes on a 2xx/3xx response from `/`.
-- **Alarms must run in us-east-1.** Route 53 publishes `HealthCheckStatus` only in us-east-1, so a precondition fails the plan if the provider is in any other region. Alarms reuse the us-east-1 `observability` topic, so the same people are notified.
+- **Alarms must run in us-east-1.** Route 53 publishes `HealthCheckStatus` only in us-east-1, so run this module with a us-east-1 provider. Alarms reuse the us-east-1 `observability` topic, so the same people are notified.
 - **Missing data counts as breaching** on these alarms. A health check that stops reporting is treated as failing.
 - **Apply order.** Both regional ALBs and the alarm topic must exist first, so this belongs in `envs/<env>/global-dns`, applied last.
 
