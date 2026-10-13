@@ -11,7 +11,7 @@ variable "env" {
 
   validation {
     condition     = contains(["dev", "staging", "prod"], var.env)
-    error_message = "env must be one of: dev, staging, prod."
+    error_message = "env must be dev, staging or prod."
   }
 }
 
@@ -37,22 +37,12 @@ variable "region_short" {
   description = "Short region code used in resource names, e.g. use1."
   type        = string
   default     = "use1"
-
-  validation {
-    condition     = can(regex("^[a-z0-9]{2,6}$", var.region_short))
-    error_message = "region_short must be 2-6 lowercase letters or digits."
-  }
 }
 
 variable "base_domain" {
   description = "Base domain the service lives under, e.g. example.com. Set in the gitignored terraform.tfvars. Required when enable_certificate is true."
   type        = string
   default     = null
-
-  validation {
-    condition     = var.base_domain == null || can(regex("^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z]{2,63}$", var.base_domain))
-    error_message = "base_domain must be a lowercase domain name without a trailing dot, e.g. example.com."
-  }
 
   validation {
     condition     = !var.enable_certificate || var.base_domain != null

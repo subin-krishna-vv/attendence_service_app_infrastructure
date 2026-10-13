@@ -11,7 +11,7 @@ variable "env" {
 
   validation {
     condition     = contains(["dev", "staging", "prod"], var.env)
-    error_message = "env must be one of: dev, staging, prod."
+    error_message = "env must be dev, staging or prod."
   }
 }
 
@@ -33,11 +33,6 @@ variable "base_domain" {
   default     = null
 
   validation {
-    condition     = var.base_domain == null || can(regex("^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z]{2,63}$", var.base_domain))
-    error_message = "base_domain must be a lowercase domain name without a trailing dot, e.g. example.com."
-  }
-
-  validation {
     condition     = !var.enable_dns_zone || var.base_domain != null
     error_message = "base_domain is required when enable_dns_zone is true."
   }
@@ -53,11 +48,6 @@ variable "service_subdomain" {
   description = "Subdomain label of the service under base_domain. The env zone is <env>.<service_subdomain>.<base_domain>."
   type        = string
   default     = "attendance"
-
-  validation {
-    condition     = can(regex("^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$", var.service_subdomain))
-    error_message = "service_subdomain must be a single lowercase DNS label."
-  }
 }
 
 variable "zone_comment" {
